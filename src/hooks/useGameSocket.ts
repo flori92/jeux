@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import { io } from 'socket.io-client';
+import io from 'socket.io-client';
 import type { GameState, Move } from '../types/game.types';
 
 interface GameSocketProps {
@@ -34,13 +34,13 @@ export const useGameSocket = ({
     socket.disconnect();
   }, [socket]);
 
-  const createGame = useCallback((playerName: string) => {
-    return new Promise<string>((resolve, reject) => {
-      socket.emit('createGame', { playerName }, (response: { gameId: string } | { error: string }) => {
+  const createGame = useCallback((playerName: string, gameType: 'checkers' | 'ludo' = 'checkers') => {
+    return new Promise<{ gameId: string; gameState: GameState }>((resolve, reject) => {
+      socket.emit('createGame', { playerName, gameType }, (response: { gameId: string; gameState: GameState } | { error: string }) => {
         if ('error' in response) {
           reject(new Error(response.error));
         } else {
-          resolve(response.gameId);
+          resolve(response);
         }
       });
     });
@@ -58,8 +58,8 @@ export const useGameSocket = ({
     });
   }, [socket]);
 
-  const makeMove = useCallback((move: Move) => {
-    socket.emit('makeMove', { move });
+  const makeMove = useCallback((move: Move, gameId: string) => {
+    socket.emit('makeMove', { gameId, move });
   }, [socket]);
 
   const invitePlayer = useCallback((email: string) => {
@@ -72,6 +72,14 @@ export const useGameSocket = ({
 
   const rejectInvite = useCallback((inviteId: string) => {
     socket.emit('rejectInvite', { inviteId });
+  }, [socket]);
+
+  const rollDice = useCallback((gameId: string) => {
+    socket.emit('rollDice', { gameId });
+  }, [socket]);
+
+  const moveLudoPiece = useCallback((gameId: string, pieceId: string) => {
+    socket.emit('moveLudoPiece', { gameId, pieceId });
   }, [socket]);
 
   useEffect(() => {
@@ -115,6 +123,8 @@ export const useGameSocket = ({
     invitePlayer,
     acceptInvite,
     rejectInvite,
+    rollDice,
+    moveLudoPiece,
     socket,
   };
 };

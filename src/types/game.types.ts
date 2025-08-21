@@ -19,6 +19,12 @@ export type GameState = {
   currentPlayer: string;
   winner: string | null;
   status: 'waiting' | 'playing' | 'finished';
+  gameType?: 'checkers' | 'ludo';
+  // Propriétés spécifiques au Ludo
+  diceValue?: number;
+  possibleMoves?: string[];
+  canRollDice?: boolean;
+  gameStatus?: 'waiting' | 'playing' | 'finished';
 };
 
 export type Move = {

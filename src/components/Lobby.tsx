@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Player } from '../types/game.types';
-import InviteModal from './InviteModal';
+import InviteModal from './InviteModal.tsx';
 
 interface LobbyProps {
   player: Player;

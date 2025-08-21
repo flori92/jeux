@@ -24,6 +24,12 @@ const socketPlayers = new Map(); // Map socketId -> playerId
 // Gestion des connexions Socket.IO
 io.on('connection', (socket) => {
   console.log('Nouvelle connexion:', socket.id);
+  // Enregistrement auto via auth du handshake (support du hook client)
+  const authPlayerId = socket.handshake?.auth?.playerId;
+  if (authPlayerId) {
+    playerSockets.set(authPlayerId, socket.id);
+    socketPlayers.set(socket.id, authPlayerId);
+  }
 
   socket.on('register', ({ playerId, playerName }) => {
     playerSockets.set(playerId, socket.id);
@@ -33,17 +39,17 @@ io.on('connection', (socket) => {
     console.log(`Joueur ${playerName} (${playerId}) enregistré`);
   });
 
-  socket.on('createGame', ({ playerName }, callback) => {
+  socket.on('createGame', ({ playerName, gameType }, callback) => {
     try {
       const playerId = socketPlayers.get(socket.id) || uuidv4();
-      const gameId = gameManager.createGame(playerId, playerName);
+      const { gameId } = gameManager.createGame(playerId, playerName, gameType);
       
       socket.join(gameId);
       
       const gameState = gameManager.getGameState(gameId);
       callback({ gameId, gameState });
       
-      console.log(`Partie ${gameId} créée par ${playerName}`);
+      console.log(`Partie ${gameId} (${gameType || 'checkers'}) créée par ${playerName}`);
     } catch (error) {
       callback({ error: error.message });
     }
@@ -60,7 +66,8 @@ io.on('connection', (socket) => {
       io.to(gameId).emit('gameStateUpdate', { gameState });
       
       // Si la partie commence (2 joueurs)
-      if (gameState.status === 'playing') {
+      const status = gameState.status || gameState.gameStatus;
+      if (status === 'playing') {
         io.to(gameId).emit('gameStarted', { gameState });
       }
       
@@ -74,7 +81,7 @@ io.on('connection', (socket) => {
 
   socket.on('makeMove', ({ gameId, move }) => {
     try {
-      const playerId = socketPlayers.get(socket.id);
+      const playerId = socketPlayers.get(socket.id) || socket.handshake?.auth?.playerId;
       const gameState = gameManager.makeMove(gameId, playerId, move);
       
       // Envoyer la mise à jour à tous les joueurs de la partie
@@ -89,6 +96,36 @@ io.on('connection', (socket) => {
       }
       
       console.log(`Mouvement effectué dans la partie ${gameId}`);
+    } catch (error) {
+      socket.emit('error', { message: error.message });
+    }
+  });
+
+  // Ludo: lancer le dé
+  socket.on('rollDice', ({ gameId }) => {
+    try {
+      const playerId = socketPlayers.get(socket.id) || socket.handshake?.auth?.playerId;
+      const result = gameManager.rollDice(gameId, playerId);
+      const updatedState = result.gameState || gameManager.getGameState(gameId);
+      io.to(gameId).emit('gameStateUpdate', { gameState: updatedState });
+      if (updatedState.winner) {
+        io.to(gameId).emit('gameEnded', { winner: updatedState.winner, gameState: updatedState });
+      }
+    } catch (error) {
+      socket.emit('error', { message: error.message });
+    }
+  });
+
+  // Ludo: déplacer un pion
+  socket.on('moveLudoPiece', ({ gameId, pieceId }) => {
+    try {
+      const playerId = socketPlayers.get(socket.id) || socket.handshake?.auth?.playerId;
+      const result = gameManager.moveLudoPiece(gameId, playerId, pieceId);
+      const updatedState = result.gameState || gameManager.getGameState(gameId);
+      io.to(gameId).emit('gameStateUpdate', { gameState: updatedState });
+      if (updatedState.winner) {
+        io.to(gameId).emit('gameEnded', { winner: updatedState.winner, gameState: updatedState });
+      }
     } catch (error) {
       socket.emit('error', { message: error.message });
     }
@@ -116,7 +153,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    const playerId = socketPlayers.get(socket.id);
+    const playerId = socketPlayers.get(socket.id) || socket.handshake?.auth?.playerId;
     
     if (playerId) {
       const gameId = gameManager.getPlayerGame(playerId);

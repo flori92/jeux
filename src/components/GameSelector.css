@@ -1,0 +1,140 @@
+.game-selector {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.game-selector h2 {
+  font-size: 2.5rem;
+  margin-bottom: 40px;
+  color: #333;
+  font-weight: 600;
+}
+
+.game-options {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.game-card {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 20px;
+  padding: 30px;
+  width: 350px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
+}
+
+.game-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border-color: #4CAF50;
+}
+
+.game-card:nth-child(2) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.game-card:nth-child(2):hover {
+  border-color: #FF6B6B;
+}
+
+.game-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-card h3 {
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.game-card p {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+
+.game-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+  text-align: left;
+}
+
+.game-card li {
+  padding: 8px 0;
+  position: relative;
+  padding-left: 25px;
+}
+
+.game-card li:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.game-card:nth-child(2) li:before {
+  color: #FFD700;
+}
+
+.game-card .btn {
+  margin-top: 20px;
+  padding: 12px 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, #4CAF50, #45a049);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(45deg, #45a049, #3d8b40);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: linear-gradient(45deg, #FF6B6B, #ee5a52);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(45deg, #ee5a52, #e04848);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .game-options {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .game-card {
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .game-selector h2 {
+    font-size: 2rem;
+  }
+}

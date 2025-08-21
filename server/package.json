@@ -1,7 +1,8 @@
 {
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "ludo-dames-server",
   "version": "1.0.0",
-  "description": "Serveur pour le jeu de dames en ligne",
+  "description": "Serveur pour le jeu de dames et ludo en ligne",
   "main": "server.js",
   "type": "module",
   "scripts": {
