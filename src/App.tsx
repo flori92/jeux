@@ -7,7 +7,7 @@ import Lobby from './components/Lobby';
 import GameSelector from './components/GameSelector';
 import ShareGameLink from './components/ShareGameLink';
 import { useGameSocket } from './hooks/useGameSocket';
-import type { GameState, Player, Move } from './types/game.types';
+import type { GameState, Player, Move, Piece } from './types/game.types';
 import './App.css';
 import './components/GameSelector.css';
 
@@ -293,6 +293,28 @@ const Game: React.FC = () => {
       };
     } else if (player && gameMode === 'ai') {
       // Mode IA : créer un état de jeu local
+      // Initialisation plateau Dames standard 8x8
+      const initCheckersBoard = () => {
+        const board: (Piece | null)[][] = Array.from({ length: 8 }, () => Array<Piece | null>(8).fill(null));
+        // Joueur blanc (haut) sur lignes 0-2 sur cases sombres
+        for (let r = 0; r < 3; r++) {
+          for (let c = 0; c < 8; c++) {
+            if ((r + c) % 2 === 1) {
+              board[r][c] = { id: `w-${r}-${c}` , playerId: 'ai_player', isKing: false, position: [r, c] } as Piece;
+            }
+          }
+        }
+        // Joueur noir (bas) sur lignes 5-7 sur cases sombres
+        for (let r = 5; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            if ((r + c) % 2 === 1) {
+              board[r][c] = { id: `b-${r}-${c}`, playerId: player.id, isKing: false, position: [r, c] } as Piece;
+            }
+          }
+        }
+        return board;
+      };
+
       const aiGameState: GameState = {
         id: gameId,
         players: [
@@ -302,7 +324,7 @@ const Game: React.FC = () => {
         currentPlayer: player.id,
         status: 'active',
         gameType: gameType,
-        board: gameType === 'checkers' ? [[]] : null,
+        board: gameType === 'checkers' ? initCheckersBoard() : null,
         diceValue: null,
         canRollDice: gameType === 'ludo',
         possibleMoves: [],
