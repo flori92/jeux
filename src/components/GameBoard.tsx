@@ -24,17 +24,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     const newBoard = Array(8).fill(null).map(() => Array(8).fill(null));
     
     // Place pieces on the board
-    gameState.players.forEach(player => {
-      // Vérifier si des pièces sont définies pour ce joueur
-      if (gameState.pieces && gameState.pieces[player.id]) {
-        gameState.pieces[player.id].forEach((piece: Piece) => {
-          const [x, y] = piece.position;
-          if (x >= 0 && x < 8 && y >= 0 && y < 8) {
-            newBoard[x][y] = piece;
-          }
-        });
-      }
-    });
+    if (gameState.board) {
+      gameState.board.flat().forEach((piece: Piece | null) => {
+        if (!piece) return;
+        const [x, y] = piece.position;
+        if (x >= 0 && x < 8 && y >= 0 && y < 8) {
+          newBoard[x][y] = piece;
+        }
+      });
+    }
     
     setBoard(newBoard);
   }, [gameState]);

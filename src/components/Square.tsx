@@ -1,5 +1,5 @@
 import React from 'react';
-import { Piece } from '../types/game.types';
+import type { Piece } from '../types/game.types';
 
 interface SquareProps {
   piece: Piece | null;

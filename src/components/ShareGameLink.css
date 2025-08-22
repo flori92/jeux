@@ -1,0 +1,166 @@
+.share-modal {
+  max-width: 500px;
+  width: 90%;
+}
+
+.share-content {
+  text-align: left;
+}
+
+.share-content p {
+  margin-bottom: 20px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.link-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  align-items: center;
+}
+
+.game-link-input {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #f8f9fa;
+  color: #333;
+  font-family: monospace;
+}
+
+.copy-btn {
+  padding: 12px 16px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.copy-btn:hover {
+  background: #2980b9;
+  transform: translateY(-1px);
+}
+
+.copy-btn.copied {
+  background: #27ae60;
+  transform: scale(1.05);
+}
+
+.share-options {
+  margin-bottom: 25px;
+}
+
+.share-options h4 {
+  margin-bottom: 15px;
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.share-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.share-btn {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.share-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.share-btn.email {
+  background: #e74c3c;
+  color: white;
+}
+
+.share-btn.email:hover {
+  background: #c0392b;
+}
+
+.share-btn.whatsapp {
+  background: #25d366;
+  color: white;
+}
+
+.share-btn.whatsapp:hover {
+  background: #20b358;
+}
+
+.share-btn.telegram {
+  background: #0088cc;
+  color: white;
+}
+
+.share-btn.telegram:hover {
+  background: #006699;
+}
+
+.share-instructions {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 4px solid #3498db;
+}
+
+.share-instructions h4 {
+  margin-bottom: 10px;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.share-instructions ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.share-instructions li {
+  margin-bottom: 5px;
+  color: #555;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .link-container {
+    flex-direction: column;
+  }
+  
+  .game-link-input {
+    margin-bottom: 10px;
+  }
+  
+  .copy-btn {
+    width: 100%;
+  }
+  
+  .share-buttons {
+    flex-direction: column;
+  }
+  
+  .share-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

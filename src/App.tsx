@@ -5,6 +5,7 @@ import GameBoard from './components/GameBoard';
 import LudoBoard from './components/LudoBoard';
 import Lobby from './components/Lobby';
 import GameSelector from './components/GameSelector';
+import ShareGameLink from './components/ShareGameLink';
 import { useGameSocket } from './hooks/useGameSocket';
 import type { GameState, Player, Move } from './types/game.types';
 import './App.css';
@@ -28,13 +29,15 @@ const App: React.FC = () => {
 
 const Home: React.FC = () => {
   const [selectedGame, setSelectedGame] = useState<'checkers' | 'ludo' | null>(null);
+  const [gameMode, setGameMode] = useState<'multiplayer' | 'ai' | null>(null);
   const [playerName, setPlayerName] = useState('');
   const [gameId, setGameId] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleGameSelect = (gameType: 'checkers' | 'ludo') => {
+  const handleGameSelect = (gameType: 'checkers' | 'ludo', mode: 'multiplayer' | 'ai') => {
     setSelectedGame(gameType);
+    setGameMode(mode);
     setError('');
   };
 
@@ -45,6 +48,19 @@ const Home: React.FC = () => {
     }
     
     const playerId = `player_${Date.now()}`;
+    
+    if (gameMode === 'ai') {
+      // Mode contre l'IA - créer une partie locale
+      const aiGameId = `ai_game_${Date.now()}`;
+      localStorage.setItem('player', JSON.stringify({ id: playerId, name: playerName }));
+      localStorage.setItem('gameId', aiGameId);
+      localStorage.setItem('gameType', selectedGame || 'checkers');
+      localStorage.setItem('gameMode', 'ai');
+      navigate(`/game/${aiGameId}`);
+      return;
+    }
+    
+    // Mode multijoueur
     const socket = io(API_URL);
     
     // Enregistrer le joueur
@@ -60,6 +76,7 @@ const Home: React.FC = () => {
         localStorage.setItem('player', JSON.stringify({ id: playerId, name: playerName }));
         localStorage.setItem('gameId', response.gameId);
         localStorage.setItem('gameType', selectedGame || 'checkers');
+        localStorage.setItem('gameMode', 'multiplayer');
         
         socket.disconnect();
         // Rediriger vers la page du jeu
@@ -74,6 +91,17 @@ const Home: React.FC = () => {
       return;
     }
     
+    // Extraire l'ID de la partie depuis un lien d'invitation si nécessaire
+    let actualGameId = gameId.trim();
+    
+    // Si c'est un lien complet, extraire l'ID de la partie
+    if (actualGameId.includes('/game/')) {
+      const matches = actualGameId.match(/\/game\/([^?]+)/);
+      if (matches && matches[1]) {
+        actualGameId = matches[1];
+      }
+    }
+    
     const playerId = `player_${Date.now()}`;
     const socket = io(API_URL);
     
@@ -81,29 +109,31 @@ const Home: React.FC = () => {
     socket.emit('register', { playerId, playerName });
     
     // Rejoindre la partie
-    socket.emit('joinGame', { gameId, playerName }, (response: { gameState?: GameState; error?: string }) => {
+    socket.emit('joinGame', { gameId: actualGameId, playerName }, (response: { gameState?: GameState; error?: string }) => {
       if (response.error) {
         setError(response.error);
         socket.disconnect();
       } else {
         // Sauvegarder les informations du joueur dans le localStorage
         localStorage.setItem('player', JSON.stringify({ id: playerId, name: playerName }));
-        localStorage.setItem('gameId', gameId);
+        localStorage.setItem('gameId', actualGameId);
         localStorage.setItem('gameType', response.gameState?.gameType || 'checkers');
+        localStorage.setItem('gameMode', 'multiplayer');
         
         socket.disconnect();
         // Rediriger vers la page du jeu
-        navigate(`/game/${gameId}`);
+        navigate(`/game/${actualGameId}`);
       }
     });
   };
 
   const handleBackToSelection = () => {
     setSelectedGame(null);
+    setGameMode(null);
     setError('');
   };
 
-  if (!selectedGame) {
+  if (!selectedGame || !gameMode) {
     return <GameSelector onGameSelect={handleGameSelect} />;
   }
 
@@ -120,13 +150,15 @@ const Home: React.FC = () => {
     'Premier à amener tous ses pions à l\'arrivée gagne'
   ];
 
+  const modeTitle = gameMode === 'ai' ? 'contre l\'Ordinateur' : 'en ligne';
+  
   return (
     <div className="home">
       <button onClick={handleBackToSelection} className="btn btn-back">
         ← Changer de jeu
       </button>
       
-      <h2>{gameTitle} en ligne</h2>
+      <h2>{gameTitle} {modeTitle}</h2>
       
       <div className="form-group">
         <label htmlFor="playerName">Votre nom :</label>
@@ -141,22 +173,26 @@ const Home: React.FC = () => {
       
       <div className="actions">
         <button onClick={handleCreateGame} className="btn btn-primary">
-          Créer une nouvelle partie
+          {gameMode === 'ai' ? 'Commencer la partie' : 'Créer une nouvelle partie'}
         </button>
         
-        <div className="divider">OU</div>
-        
-        <div className="join-game">
-          <input
-            type="text"
-            value={gameId}
-            onChange={(e) => setGameId(e.target.value)}
-            placeholder="ID de la partie"
-          />
-          <button onClick={handleJoinGame} className="btn btn-secondary">
-            Rejoindre une partie
-          </button>
-        </div>
+        {gameMode === 'multiplayer' && (
+          <>
+            <div className="divider">OU</div>
+            
+            <div className="join-game">
+              <input
+                type="text"
+                value={gameId}
+                onChange={(e) => setGameId(e.target.value)}
+                placeholder="ID de la partie ou lien d'invitation"
+              />
+              <button onClick={handleJoinGame} className="btn btn-secondary">
+                Rejoindre une partie
+              </button>
+            </div>
+          </>
+        )}
       </div>
       
       {error && <div className="error">{error}</div>}
@@ -178,7 +214,9 @@ const Game: React.FC = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
   const [gameType, setGameType] = useState<'checkers' | 'ludo'>('checkers');
+  const [gameMode, setGameMode] = useState<'multiplayer' | 'ai'>('multiplayer');
   const [gameId, setGameId] = useState<string>('');
+  const [showShareModal, setShowShareModal] = useState<boolean>(false);
   const [pendingInvites, setPendingInvites] = useState<Array<{
     id: string;
     from: string;
@@ -190,6 +228,7 @@ const Game: React.FC = () => {
   useEffect(() => {
     const savedPlayer = localStorage.getItem('player');
     const savedGameType = localStorage.getItem('gameType');
+    const savedGameMode = localStorage.getItem('gameMode');
     const savedGameId = localStorage.getItem('gameId');
     
     if (savedPlayer) {
@@ -200,6 +239,10 @@ const Game: React.FC = () => {
     
     if (savedGameType) {
       setGameType(savedGameType as 'checkers' | 'ludo');
+    }
+    
+    if (savedGameMode) {
+      setGameMode(savedGameMode as 'multiplayer' | 'ai');
     }
     
     if (savedGameId) {
@@ -237,32 +280,62 @@ const Game: React.FC = () => {
     },
   });
 
-  // Se connecter au serveur WebSocket lorsque le composant est monté
+  // Se connecter au serveur WebSocket lorsque le composant est monté (seulement en mode multijoueur)
   useEffect(() => {
-    if (player) {
+    if (player && gameMode === 'multiplayer') {
       connect();
       
       return () => {
         disconnect();
       };
+    } else if (player && gameMode === 'ai') {
+      // Mode IA : créer un état de jeu local
+      const aiGameState: GameState = {
+        id: gameId,
+        players: [
+          { id: player.id, name: player.name, color: gameType === 'ludo' ? 'red' : 'black' },
+          { id: 'ai_player', name: 'Ordinateur', color: gameType === 'ludo' ? 'blue' : 'white' }
+        ],
+        currentPlayer: player.id,
+        status: 'active',
+        gameType: gameType,
+        board: gameType === 'checkers' ? [[]] : null,
+        diceValue: null,
+        canRollDice: gameType === 'ludo',
+        possibleMoves: [],
+        gameStatus: 'active'
+      };
+      setGameState(aiGameState);
     }
-  }, [player, connect, disconnect]);
+  }, [player, gameMode, connect, disconnect, gameId, gameType]);
 
   const handleMove = (move: Move) => {
-    if (gameState && player && gameId) {
+    if (gameMode === 'multiplayer' && gameState && player && gameId) {
       makeMove(move, gameId);
+    } else if (gameMode === 'ai' && gameState) {
+      // Logique IA locale pour les mouvements
+      // TODO: Implémenter la logique IA côté client
+      console.log('Mode IA - mouvement:', move);
     }
   };
 
   const handleRollDice = () => {
-    if (gameId) {
+    if (gameMode === 'multiplayer' && gameId) {
       rollDice(gameId);
+    } else if (gameMode === 'ai' && gameState) {
+      // Lancer le dé en mode IA
+      const diceValue = Math.floor(Math.random() * 6) + 1;
+      setGameState(prev => prev ? { ...prev, diceValue, canRollDice: false } : null);
     }
   };
 
   const handleMovePiece = (pieceId: string) => {
-    if (gameId) {
+    if (gameMode === 'multiplayer' && gameId) {
       moveLudoPiece(gameId, pieceId);
+    } else if (gameMode === 'ai' && gameState) {
+      // Mouvement de pièce en mode IA
+      console.log('Mode IA - mouvement pièce:', pieceId);
+      // TODO: Implémenter la logique de mouvement IA
     }
   };
 
@@ -286,13 +359,31 @@ const Game: React.FC = () => {
 
   if (!gameState) {
     return (
-      <Lobby
-        player={player}
-        onInvitePlayer={handleInvitePlayer}
-        pendingInvites={pendingInvites}
-        onAcceptInvite={handleAcceptInvite}
-        onRejectInvite={handleRejectInvite}
-      />
+      <>
+        <Lobby
+          player={player}
+          onInvitePlayer={handleInvitePlayer}
+          pendingInvites={pendingInvites}
+          onAcceptInvite={handleAcceptInvite}
+          onRejectInvite={handleRejectInvite}
+        />
+        {gameMode === 'multiplayer' && gameId && (
+          <div className="share-game-section">
+            <button 
+              onClick={() => setShowShareModal(true)} 
+              className="btn btn-share"
+            >
+              📤 Partager la partie
+            </button>
+          </div>
+        )}
+        {showShareModal && (
+          <ShareGameLink 
+            gameId={gameId} 
+            onClose={() => setShowShareModal(false)} 
+          />
+        )}
+      </>
     );
   }
 

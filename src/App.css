@@ -286,6 +286,50 @@ h1, h2, h3 {
   gap: 10px;
 }
 
+/* Styles pour le partage de partie */
+.share-game-section {
+  text-align: center;
+  margin: 20px 0;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.btn-share {
+  background: linear-gradient(45deg, #9b59b6, #8e44ad);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn-share:hover {
+  background: linear-gradient(45deg, #8e44ad, #7d3c98);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(142, 68, 173, 0.3);
+}
+
+.btn-back {
+  background: #95a5a6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 15px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-back:hover {
+  background: #7f8c8d;
+}
+
 /* Styles responsifs */
 @media (max-width: 768px) {
   .game-container {
@@ -303,5 +347,10 @@ h1, h2, h3 {
   .btn-secondary {
     margin-left: 0;
     margin-top: 10px;
+  }
+  
+  .share-game-section {
+    margin: 15px 0;
+    padding: 15px;
   }
 }

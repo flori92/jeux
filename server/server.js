@@ -132,24 +132,39 @@ io.on('connection', (socket) => {
   });
 
   socket.on('invitePlayer', ({ email, gameId }) => {
-    // Dans une vraie application, vous enverriez un email
-    // Ici, nous simulons avec un ID d'invitation
-    const inviteId = uuidv4();
     const playerId = socketPlayers.get(socket.id);
     const player = gameManager.getPlayer(playerId);
     
+    if (!player || !gameId) {
+      socket.emit('error', { message: 'Impossible d\'envoyer l\'invitation' });
+      return;
+    }
+
+    // Créer un lien d'invitation
+    const inviteLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/game/${gameId}?invite=true`;
+    
     // Créer une invitation
     const invite = {
-      id: inviteId,
-      from: player?.name || 'Un joueur',
+      id: uuidv4(),
+      from: player.name,
       gameId: gameId,
-      email: email
+      email: email,
+      link: inviteLink,
+      message: `${player.name} vous invite à jouer ! Cliquez sur ce lien pour rejoindre la partie: ${inviteLink}`
     };
     
-    // Pour la démo, on envoie l'invitation au joueur qui l'a créée
-    socket.emit('inviteSent', { invite });
+    // Simuler l'envoi d'email (dans une vraie app, utiliser un service comme SendGrid, Nodemailer, etc.)
+    console.log(`📧 Email simulé envoyé à ${email}:`);
+    console.log(`De: ${player.name}`);
+    console.log(`Sujet: Invitation à jouer`);
+    console.log(`Message: ${invite.message}`);
     
-    console.log(`Invitation envoyée à ${email} pour la partie ${gameId}`);
+    // Confirmer l'envoi au joueur
+    socket.emit('inviteSent', { 
+      invite,
+      success: true,
+      message: `Invitation envoyée à ${email} avec succès !`
+    });
   });
 
   socket.on('disconnect', () => {

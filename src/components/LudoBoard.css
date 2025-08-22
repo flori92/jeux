@@ -1,0 +1,282 @@
+.ludo-board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: white;
+}
+
+.ludo-game-info {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.ludo-game-info h2 {
+  margin: 0 0 10px 0;
+  font-size: 2rem;
+}
+
+.ludo-players-list {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.ludo-player {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px 15px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.ludo-player.active {
+  border-color: #FFD700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+.ludo-player-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.ludo-player-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 10px;
+  border: 2px solid white;
+}
+
+.ludo-board-container {
+  position: relative;
+  width: 500px;
+  height: 500px;
+  background: #f0f0f0;
+  border: 3px solid #333;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+
+.ludo-base {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  border: 2px solid #333;
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 10px;
+  gap: 5px;
+}
+
+.ludo-base.red { 
+  top: 10px; 
+  left: 10px; 
+  background: #ff6b6b; 
+}
+
+.ludo-base.blue { 
+  top: 10px; 
+  right: 10px; 
+  background: #4dabf7; 
+}
+
+.ludo-base.yellow { 
+  bottom: 10px; 
+  left: 10px; 
+  background: #ffd43b; 
+}
+
+.ludo-base.green { 
+  bottom: 10px; 
+  right: 10px; 
+  background: #51cf66; 
+}
+
+.ludo-piece {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  border: 2px solid #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.ludo-piece:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.ludo-piece.selected {
+  box-shadow: 0 0 15px #FFD700;
+  border-color: #FFD700;
+}
+
+.ludo-piece.red { background: #ff6b6b; }
+.ludo-piece.blue { background: #4dabf7; }
+.ludo-piece.yellow { background: #ffd43b; }
+.ludo-piece.green { background: #51cf66; }
+
+.ludo-track {
+  position: absolute;
+  background: #fff;
+  border: 1px solid #333;
+}
+
+.ludo-track.horizontal {
+  width: 40px;
+  height: 30px;
+}
+
+.ludo-track.vertical {
+  width: 30px;
+  height: 40px;
+}
+
+.ludo-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(45deg, #ff6b6b, #4dabf7, #ffd43b, #51cf66);
+  border: 3px solid #333;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.ludo-dice-container {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.ludo-dice {
+  width: 60px;
+  height: 60px;
+  background: white;
+  border: 2px solid #333;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ludo-dice:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.ludo-dice.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ludo-roll-button {
+  padding: 12px 24px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  background: linear-gradient(45deg, #FFD700, #FFA500);
+  color: #333;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 10px;
+}
+
+.ludo-roll-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+}
+
+.ludo-roll-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ludo-game-status {
+  text-align: center;
+  margin: 20px 0;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.ludo-winner {
+  background: linear-gradient(45deg, #FFD700, #FFA500);
+  color: #333;
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  margin: 20px 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+}
+
+.ludo-instructions {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 20px;
+  max-width: 500px;
+}
+
+.ludo-instructions h3 {
+  margin-top: 0;
+  color: #FFD700;
+}
+
+.ludo-instructions ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.ludo-instructions li {
+  margin: 5px 0;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .ludo-board-container {
+    width: 350px;
+    height: 350px;
+  }
+  
+  .ludo-base {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .ludo-piece {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .ludo-center {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .ludo-players-list {
+    flex-direction: column;
+    align-items: center;
+  }
+}

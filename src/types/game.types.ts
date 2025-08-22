@@ -1,7 +1,7 @@
-export type Player = {
+export interface Player {
   id: string;
   name: string;
-  color: 'black' | 'white';
+  color: 'black' | 'white' | 'red' | 'blue' | 'yellow' | 'green';
 };
 
 export type Piece = {
@@ -13,18 +13,16 @@ export type Piece = {
 
 export type GameState = {
   id: string;
-  board: (Piece | null)[][];
   players: Player[];
-  pieces: Record<string, Piece[]>; // Map des pièces par ID de joueur
   currentPlayer: string;
-  winner: string | null;
-  status: 'waiting' | 'playing' | 'finished';
+  status: 'waiting' | 'playing' | 'finished' | 'active';
+  board?: (Piece | null)[][] | null;
+  winner?: string;
   gameType?: 'checkers' | 'ludo';
-  // Propriétés spécifiques au Ludo
-  diceValue?: number;
+  diceValue?: number | null;
   possibleMoves?: string[];
   canRollDice?: boolean;
-  gameStatus?: 'waiting' | 'playing' | 'finished';
+  gameStatus?: 'waiting' | 'playing' | 'finished' | 'active';
 };
 
 export type Move = {
