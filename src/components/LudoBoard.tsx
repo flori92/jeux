@@ -1,7 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './LudoBoard.css';
 import GameNotifications from './GameNotifications';
 import { useNotifications } from '../hooks/useNotifications';
+
+interface GameRules {
+  allowBackwardInEndZone: boolean;
+  requireAllPiecesInEndZone: boolean;
+}
 
 interface LudoPiece {
   id: string;
@@ -24,6 +29,8 @@ interface LudoMove {
   pieceId: string;
   from: string | number;
   to: string | number;
+  direction?: 'forward' | 'backward';
+  isCapture?: boolean;
   type: 'move' | 'capture' | 'finish';
 }
 
@@ -42,12 +49,17 @@ interface LudoBoardProps {
   gameState: LudoBoardState;
   playerId: string;
   onRollDice: () => void;
-  onMovePiece: (pieceId: string) => void;
+  onMovePiece: (pieceId: string, direction: 'forward' | 'backward', rules: GameRules) => void;
 }
 
 const LudoBoard: React.FC<LudoBoardProps> = ({ gameState, playerId, onRollDice, onMovePiece }) => {
   const [selectedPiece, setSelectedPiece] = useState<string | null>(null);
   const [possibleMoves, setPossibleMoves] = useState<string[]>([]);
+  const [moveDirection, setMoveDirection] = useState<'forward' | 'backward'>('forward');
+  const [gameRules] = useState<GameRules>({
+    allowBackwardInEndZone: false,
+    requireAllPiecesInEndZone: false
+  });
   const { notifications, removeNotification, showError, showInfo } = useNotifications();
 
   // Calculer les mouvements possibles quand le dé est lancé
@@ -77,27 +89,173 @@ const LudoBoard: React.FC<LudoBoardProps> = ({ gameState, playerId, onRollDice, 
     }
   }, [gameState.diceValue, gameState.currentPlayer, playerId, showInfo]);
 
-  const handlePieceClick = (pieceId: string) => {
-    if (gameState.currentPlayer.id === playerId && possibleMoves.includes(pieceId)) {
+  interface ExtendedLudoMove extends LudoMove {
+    direction?: 'forward' | 'backward';
+    isCapture?: boolean;
+  }
+
+  const canCaptureBackward = useCallback((pieceId: string): boolean => {
+    // Vérifier si un mouvement de capture en arrière est possible pour ce pion
+    if (!gameState?.possibleMoves) return false;
+    
+    // Vérifier si l'un des mouvements possibles est une capture en arrière
+    return (gameState.possibleMoves as ExtendedLudoMove[]).some((move) => 
+      move.pieceId === pieceId && 
+      move.direction === 'backward' &&
+      move.isCapture === true
+    );
+  }, [gameState.possibleMoves]);
+
+  const handlePieceClick = useCallback((pieceId: string) => {
+    if (gameState.currentPlayer.id !== playerId) return;
+    
+    const backwardPossible = canCaptureBackward(pieceId);
+    const forwardPossible = possibleMoves.includes(pieceId);
+    
+    if (backwardPossible || forwardPossible) {
       setSelectedPiece(pieceId);
-      onMovePiece(pieceId);
-      setPossibleMoves([]); // Réinitialiser après le mouvement
-    } else if (gameState.currentPlayer.id === playerId && !possibleMoves.includes(pieceId)) {
+      const direction = backwardPossible ? 'backward' : 'forward';
+      setMoveDirection(direction);
+      
+      // Si un seul mouvement est possible, confirmer automatiquement
+      if ((backwardPossible && !forwardPossible) || (!backwardPossible && forwardPossible)) {
+        onMovePiece(pieceId, direction, gameRules);
+        setSelectedPiece(null);
+        setPossibleMoves([]);
+      }
+    } else {
       showError('Mouvement invalide', 'Ce pion ne peut pas bouger avec cette valeur de dé.');
     }
-  };
+  }, [gameState.currentPlayer.id, playerId, possibleMoves, canCaptureBackward, showError, gameRules, onMovePiece]);
 
-  const handleRollDice = () => {
-    if (gameState.canRollDice && gameState.currentPlayer.id === playerId) {
-      onRollDice();
+  const confirmMove = useCallback((direction: 'forward' | 'backward') => {
+    if (selectedPiece) {
+      onMovePiece(selectedPiece, direction, gameRules);
       setSelectedPiece(null);
+      setPossibleMoves([]);
     }
+  }, [selectedPiece, onMovePiece, gameRules]);
+
+  const cancelMove = () => {
+    setSelectedPiece(null);
   };
 
-  const isMyTurn = gameState.currentPlayer.id === playerId;
+
+
+  const renderDirectionButtons = () => {
+    if (!selectedPiece) return null;
+    
+    const backwardPossible = canCaptureBackward(selectedPiece);
+    const forwardPossible = possibleMoves.includes(selectedPiece);
+    
+    // Si seul un mouvement est possible, ne pas afficher le sélecteur de direction
+    if ((backwardPossible && !forwardPossible) || (!backwardPossible && forwardPossible)) {
+      return (
+        <div className="direction-buttons">
+          <div className="action-buttons single-action">
+            <button 
+              className="confirm-btn" 
+              onClick={() => confirmMove(backwardPossible ? 'backward' : 'forward')}
+            >
+              {backwardPossible ? 'Capturer en reculant' : 'Avancer'}
+            </button>
+            <button className="cancel-btn" onClick={cancelMove}>
+              Annuler
+            </button>
+          </div>
+        </div>
+      );
+    }
+    
+    // Si les deux mouvements sont possibles, afficher les deux options
+    return (
+      <div className="direction-buttons">
+        <h3>Choisir la direction :</h3>
+        <div className="button-group">
+          {forwardPossible && (
+            <button 
+              className={`direction-btn ${moveDirection === 'forward' ? 'active' : ''}`}
+              onClick={() => setMoveDirection('forward')}
+            >
+              Avancer
+            </button>
+          )}
+          {backwardPossible && (
+            <button 
+              className={`direction-btn ${moveDirection === 'backward' ? 'active' : ''}`}
+              onClick={() => setMoveDirection('backward')}
+            >
+              Capturer en reculant
+            </button>
+          )}
+        </div>
+        <div className="action-buttons">
+          <button 
+            className="confirm-btn" 
+            onClick={() => confirmMove(moveDirection)}
+            disabled={!moveDirection}
+          >
+            Confirmer
+          </button>
+          <button className="cancel-btn" onClick={cancelMove}>
+            Annuler
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderGameControls = useCallback(() => {
+    if (gameState.currentPlayer.id !== playerId) {
+      return (
+        <div className="game-status">
+          En attente du joueur {gameState.currentPlayer.name}...
+        </div>
+      );
+    }
+
+    return (
+      <div className="game-controls">
+        <button
+          onClick={onRollDice}
+          disabled={!gameState.canRollDice}
+          className="roll-dice-button"
+        >
+          🎲 Lancer le dé
+        </button>
+        <div className="dice-value">
+          {gameState.diceValue ? `Résultat : ${gameState.diceValue}` : 'Lancez le dé pour commencer'}
+        </div>
+      </div>
+    );
+  }, [gameState.currentPlayer.id, gameState.currentPlayer.name, gameState.canRollDice, gameState.diceValue, onRollDice, playerId]);
+
+  const renderPlayersInfo = () => {
+    return (
+      <div className="players-info">
+        {gameState.players.map(player => (
+          <div 
+            key={player.id} 
+            className={`player-info ${player.id === gameState.currentPlayer.id ? 'current-player' : ''}`}
+          >
+            <div 
+              className="player-color" 
+              style={{ backgroundColor: player.color }}
+            />
+            <div className="player-name">
+              {player.name} {player.id === playerId ? '(Vous)' : ''}
+            </div>
+            <div className="player-stats">
+              Pions terminés: {player.finishedPieces}/4
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   const renderBase = (color: string, pieces: LudoPiece[]) => {
-    const basePieces = pieces.filter(p => !p.isInPlay);
+    const basePieces = pieces.filter(p => p.position === 'base');
     return (
       <div className={`player-base ${color}-base`}>
         <div className="base-grid">
@@ -119,40 +277,7 @@ const LudoBoard: React.FC<LudoBoardProps> = ({ gameState, playerId, onRollDice, 
   const getPiecesOnPosition = (position: number | string) => {
     return gameState.players
       .flatMap(p => p.pieces)
-      .filter(p => p.isInPlay && p.position === position);
-  };
-
-  const renderHomePath = (color: string) => {
-    const homeCells = [];
-    const player = gameState.players.find(p => p.color === color);
-    
-    for (let i = 0; i < 5; i++) {
-      const piecesOnCell = player?.pieces.filter(p => p.position === `${color}-home-${i}`) || [];
-      
-      homeCells.push(
-        <div key={`${color}-home-${i}`} className={`home-cell ${color}-home`}>
-          {i === 4 && <span className="finish-marker">🏠</span>}
-          {piecesOnCell.map(piece => (
-            <div
-              key={piece.id}
-              className={`piece ${color}-piece ${selectedPiece === piece.id ? 'selected' : ''} ${possibleMoves.includes(piece.id) ? 'movable' : ''}`}
-              onClick={() => handlePieceClick(piece.id)}
-            >
-              {piece.id.split('-')[1]}
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return homeCells;
-  };
-
-  const renderCenter = () => {
-    return (
-      <div className="center-triangle">
-        <div className="center-logo">🎯</div>
-      </div>
-    );
+      .filter(p => p.isInPlay && p.position === position);  
   };
 
   const renderPath = () => {
@@ -349,6 +474,39 @@ const LudoBoard: React.FC<LudoBoardProps> = ({ gameState, playerId, onRollDice, 
     );
   };
 
+  const renderHomePath = (color: string) => {
+    const homeCells = [];
+    const player = gameState.players.find(p => p.color === color);
+    
+    for (let i = 0; i < 5; i++) {
+      const piecesOnCell = player?.pieces.filter(p => p.position === `${color}-home-${i}`) || [];
+      
+      homeCells.push(
+        <div key={`${color}-home-${i}`} className={`home-cell ${color}-home`}>
+          {i === 4 && <span className="finish-marker">🏠</span>}
+          {piecesOnCell.map(piece => (
+            <div
+              key={piece.id}
+              className={`piece ${color}-piece ${selectedPiece === piece.id ? 'selected' : ''} ${possibleMoves.includes(piece.id) ? 'movable' : ''}`}
+              onClick={() => handlePieceClick(piece.id)}
+            >
+              {piece.id.split('-')[1]}
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return homeCells;
+  };
+
+  const renderCenter = () => {
+    return (
+      <div className="center-triangle">
+        <div className="center-logo">🎯</div>
+      </div>
+    );
+  };
+
   return (
     <div className="ludo-board">
       <GameNotifications 
@@ -356,31 +514,15 @@ const LudoBoard: React.FC<LudoBoardProps> = ({ gameState, playerId, onRollDice, 
         onRemoveNotification={removeNotification} 
       />
       
+      {selectedPiece && (
+        <div className="direction-overlay">
+          {renderDirectionButtons()}
+        </div>
+      )}
       <div className="game-container">
         {renderPath()}
-      </div>
-
-      <div className="game-controls">
-        <button 
-          onClick={handleRollDice}
-          disabled={!gameState.canRollDice || !isMyTurn}
-          className="dice-button"
-        >
-          Lancer le dé
-        </button>
-        {gameState.diceValue && (
-          <div className="dice-value">Dé: {gameState.diceValue}</div>
-        )}
-      </div>
-
-      <div className="players-info">
-        {gameState.players.map(player => (
-          <div key={player.id} className={`player-info ${player.id === gameState.currentPlayer.id ? 'active' : ''}`}>
-            <div className="player-color" style={{ backgroundColor: player.color }}></div>
-            <span>{player.name}</span>
-            <span className="pieces-count">Pièces finies: {player.finishedPieces}/4</span>
-          </div>
-        ))}
+        {renderGameControls()}
+        {renderPlayersInfo()}
       </div>
     </div>
   );

@@ -278,37 +278,50 @@
 /* Informations des joueurs */
 .players-info {
   display: flex;
-  justify-content: space-around;
-  margin-top: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  margin: 20px 0;
   width: 100%;
   max-width: 600px;
-  flex-wrap: wrap;
-  gap: 10px;
 }
 
 .player-info {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 10px;
+  padding: 12px 16px;
   border-radius: 8px;
-  background-color: #fff;
+  background-color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 150px;
   transition: all 0.3s ease;
-  min-width: 140px;
 }
 
-.player-info.active {
-  background-color: #e3f2fd;
-  border: 2px solid #2196f3;
-  transform: scale(1.05);
+.player-info.current-player {
+  border: 2px solid #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+  background-color: #f0f9f0;
 }
 
 .player-color {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  margin-right: 10px;
-  border: 2px solid #333;
+  margin-bottom: 8px;
+  border: 2px solid #f0f0f0;
+}
+
+.player-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.player-stats {
+  font-size: 0.85rem;
+  color: #666;
+  text-align: center;
 }
 
 .pieces-count {
@@ -576,6 +589,157 @@
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Overlay et boutons de direction */
+.direction-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.direction-buttons {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(40, 44, 52, 0.98);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  text-align: center;
+  max-width: 90%;
+  width: 320px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  color: #f8f9fa;
+}
+
+.direction-buttons h3 {
+  margin: 0 0 1.5rem 0;
+  color: #f8f9fa;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.8rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.direction-btn {
+  padding: 0.9rem 1.8rem;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #2c3e50, #34495e);
+  color: #ecf0f1;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 1rem;
+  min-width: 140px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.direction-btn:hover {
+  background: linear-gradient(145deg, #3b4f6b, #2c3e50);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.direction-btn.active {
+  animation: pulse 1.5s infinite;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.action-buttons.single-action {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.confirm-btn, .cancel-btn {
+  padding: 0.9rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 1rem;
+  min-width: 160px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.confirm-btn {
+  background: linear-gradient(145deg, #2ecc71, #1abc9c);
+  color: white;
+}
+
+.confirm-btn:hover {
+  background: linear-gradient(145deg, #1abc9c, #2ecc71);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.cancel-btn {
+  background: linear-gradient(145deg, #c0392b, #e74c3c);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.cancel-btn:hover {
+  background: linear-gradient(145deg, #e74c3c, #c0392b);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+}
+
+.cancel-btn:active {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 15px rgba(231, 76, 60, 0.3);
+}
+
+/* Désactivé */
+.direction-btn:disabled,
+.confirm-btn:disabled,
+.cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Animation de pulsation pour le bouton actif */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
 .ludo-game-status {

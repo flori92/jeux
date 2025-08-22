@@ -128,6 +128,41 @@ class LudoGame {
     };
   }
 
+  // Vérifie si une capture est possible en reculant de 'steps' cases
+  canCaptureBackward(piece, steps) {
+    if (piece.position === 'base' || piece.position === 'finished') {
+      return false;
+    }
+    
+    // Calculer la position en reculant
+    const currentPos = piece.position;
+    let backwardPos;
+    
+    if (typeof currentPos === 'number') {
+      backwardPos = (currentPos - steps + 52) % 52; // +52 pour gérer les nombres négatifs
+    } else if (currentPos.startsWith('home-')) {
+      // Ne pas permettre de reculer dans la colonne de fin
+      return false;
+    }
+    
+    // Vérifier s'il y a un pion adverse sur cette case
+    for (const p of this.players) {
+      if (p.id === piece.playerId) continue;
+      
+      for (const enemyPiece of p.pieces) {
+        if (enemyPiece.position === backwardPos) {
+          // Vérifier que ce n'est pas une zone de sécurité
+          const safeZones = [1, 9, 14, 22, 27, 35, 40, 48];
+          if (!safeZones.includes(backwardPos)) {
+            return true;
+          }
+        }
+      }
+    }
+    
+    return false;
+  }
+
   calculatePossibleMoves(player, diceValue) {
     const moves = [];
     
@@ -140,19 +175,37 @@ class LudoGame {
           pieceId: piece.id,
           from: 'base',
           to: this.board.startPositions[player.color],
-          type: 'start'
+          type: 'start',
+          direction: 'forward'
         });
       }
       // Si le pion est en jeu
       else if (piece.position !== 'base') {
-        const newPosition = this.calculateNewPosition(piece, diceValue, player.color);
-        if (newPosition !== null) {
+        // Vérifier le mouvement vers l'avant
+        const forwardPosition = this.calculateNewPosition(piece, diceValue, player.color);
+        if (forwardPosition !== null) {
           moves.push({
             pieceId: piece.id,
             from: piece.position,
-            to: newPosition,
-            type: this.getMoveType(piece.position, newPosition)
+            to: forwardPosition,
+            type: this.getMoveType(piece.position, forwardPosition),
+            direction: 'forward'
           });
+        }
+        
+        // Vérifier si on peut captuer en reculant
+        if (this.canCaptureBackward(piece, diceValue)) {
+          const backwardPosition = this.calculateNewPosition(piece, -diceValue, player.color);
+          if (backwardPosition !== null) {
+            moves.push({
+              pieceId: piece.id,
+              from: piece.position,
+              to: backwardPosition,
+              type: 'capture',
+              direction: 'backward',
+              isCapture: true
+            });
+          }
         }
       }
     }
@@ -217,8 +270,8 @@ class LudoGame {
     return null;
   }
 
-  validateAndMovePiece(piece, diceValue) {
-    // Pion en base - doit sortir avec un 6
+  validateAndMovePiece(piece, diceValue, direction = 'forward') {
+    // Pion en base - doit sortir avec un 6 (toujours en avant)
     if (piece.position === 'base') {
       if (diceValue !== 6) {
         return { valid: false, error: 'Un 6 est nécessaire pour sortir de la base' };
@@ -226,15 +279,24 @@ class LudoGame {
       return { valid: true, newPosition: this.getStartPosition(piece.playerId), type: 'start' };
     }
 
-    // Calculer la nouvelle position
-    const newPosition = this.calculateNewPosition(piece, diceValue);
+    // Calculer la nouvelle position en fonction de la direction
+    const newPosition = this.calculateNewPosition(piece, diceValue, direction);
     
     // Vérifier si le mouvement est valide
     if (newPosition === null) {
-      return { valid: false, error: 'Mouvement impossible' };
+      return { 
+        valid: false, 
+        error: direction === 'forward' 
+          ? 'Mouvement avant impossible' 
+          : 'Mouvement arrière impossible' 
+      };
     }
 
-    return { valid: true, newPosition, type: 'normal' };
+    return { 
+      valid: true, 
+      newPosition, 
+      type: direction === 'forward' ? 'move_forward' : 'move_backward' 
+    };
   }
 
   getStartPosition(playerId) {
@@ -243,11 +305,17 @@ class LudoGame {
     return startPositions[playerIndex];
   }
 
-  calculateNewPosition(piece, diceValue) {
+  calculateNewPosition(piece, diceValue, direction = 'forward') {
     if (piece.position === 'base') return null;
     
     const currentPos = piece.position;
-    const newPos = currentPos + diceValue;
+    const newPos = direction === 'forward' ? currentPos + diceValue : currentPos - diceValue;
+    
+    // Vérifier si le mouvement est valide (ne pas revenir avant la position de départ)
+    const startPosition = this.getStartPosition(piece.playerId);
+    if (newPos < 1 || (newPos < startPosition && newPos + 52 > startPosition)) {
+      return null; // Mouvement invalide
+    }
     
     // Vérifier si le pion atteint la zone de fin
     const maxPosition = this.getMaxPosition(piece.playerId);
@@ -259,7 +327,10 @@ class LudoGame {
       return 'finished';
     }
     
-    return newPos > 52 ? newPos - 52 : newPos; // Boucle autour du plateau
+    // Gérer le bouclage autour du plateau
+    if (newPos > 52) return newPos - 52;
+    if (newPos < 1) return newPos + 52;
+    return newPos;
   }
 
   getMaxPosition(playerId) {
@@ -278,7 +349,9 @@ class LudoGame {
     const safeZones = [1, 9, 14, 22, 27, 35, 40, 48];
     if (safeZones.includes(newPosition)) return false;
 
-    // Chercher des pions adverses sur la même case
+    let captured = false;
+    
+    // Vérifier les pions adverses sur la même case (capture directe)
     for (const player of this.players) {
       if (player.id === piece.playerId) continue;
       
@@ -286,12 +359,12 @@ class LudoGame {
         if (enemyPiece.position === newPosition) {
           // Capturer le pion adverse
           enemyPiece.position = 'base';
-          return true;
+          captured = true;
         }
       }
     }
     
-    return false;
+    return captured;
   }
 
   checkWinCondition() {
@@ -304,7 +377,7 @@ class LudoGame {
     return null;
   }
 
-  makeMove(playerId, pieceId) {
+  makeMove(playerId, pieceId, direction = 'forward') {
     if (this.status !== 'playing') {
       return { valid: false, error: 'La partie n\'est pas en cours' };
     }
@@ -322,17 +395,37 @@ class LudoGame {
       return { valid: false, error: 'Pion invalide' };
     }
 
-    // Valider le mouvement
-    const moveResult = this.validateAndMovePiece(piece, this.diceValue);
+    // Vérifier si c'est un mouvement de capture en arrière
+    const isBackwardCapture = (direction === 'backward');
+    
+    // Si c'est un mouvement en arrière mais qu'il n'y a pas de capture possible, refuser
+    if (isBackward && !this.canCaptureBackward(piece, this.diceValue)) {
+      return { valid: false, error: 'Mouvement arrière non autorisé' };
+    }
+
+    // Valider et effectuer le mouvement
+    const moveResult = this.validateAndMovePiece(
+      piece, 
+      isBackward ? -this.diceValue : this.diceValue, 
+      direction
+    );
+    
     if (!moveResult.valid) {
       return moveResult;
     }
 
-    // Effectuer le mouvement
+    // Mettre à jour la position du pion
+    const previousPosition = piece.position;
     this.movePiece(piece, moveResult.newPosition);
 
     // Vérifier les captures
     const captured = this.checkCaptures(piece, moveResult.newPosition);
+    
+    // Si c'était un mouvement de capture en arrière mais qu'aucune capture n'a eu lieu, annuler le mouvement
+    if (isBackward && !captured) {
+      this.movePiece(piece, previousPosition);
+      return { valid: false, error: 'Aucune capture effectuée' };
+    }
 
     // Vérifier les conditions de victoire
     const winner = this.checkWinCondition();
