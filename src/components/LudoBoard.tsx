@@ -64,24 +64,32 @@ const LudoBoard: React.FC<LudoBoardProps> = ({ gameState, playerId, onRollDice, 
 
   // Calculer les mouvements possibles quand le dé est lancé
   useEffect(() => {
-    if (gameState.diceValue && gameState.currentPlayer.id === playerId) {
+    if (gameState.diceValue && gameState.currentPlayer?.id === playerId) {
       const movablePieces: string[] = [];
       
-      gameState.currentPlayer.pieces.forEach(piece => {
+      gameState.currentPlayer.pieces?.forEach(piece => {
         // Pion en base - peut sortir avec un 6
         if (piece.position === 'base' && gameState.diceValue === 6) {
           movablePieces.push(piece.id);
         }
         // Pion en jeu - peut bouger si le mouvement est valide
         else if (piece.position !== 'base' && piece.position !== 'finished') {
-          // Vérification simplifiée - dans un vrai jeu, il faudrait vérifier les collisions
-          movablePieces.push(piece.id);
+          // Vérifier si le mouvement est valide en fonction du dé
+          if (gameState.diceValue !== null) {
+            const currentPos = typeof piece.position === 'number' ? piece.position : 0;
+            const newPos = currentPos + gameState.diceValue;
+            
+            // Vérifier si la nouvelle position est valide (moins de 52 cases en tout)
+            if (newPos <= 51) {
+              movablePieces.push(piece.id);
+            }
+          }
         }
       });
       
       setPossibleMoves(movablePieces);
       
-      if (movablePieces.length === 0) {
+      if (movablePieces.length === 0 && gameState.diceValue) {
         showInfo('Aucun mouvement possible', `Avec un ${gameState.diceValue}, aucun pion ne peut bouger.`);
       }
     } else {
@@ -107,26 +115,53 @@ const LudoBoard: React.FC<LudoBoardProps> = ({ gameState, playerId, onRollDice, 
   }, [gameState.possibleMoves]);
 
   const handlePieceClick = useCallback((pieceId: string) => {
-    if (gameState.currentPlayer.id !== playerId) return;
-    
-    const backwardPossible = canCaptureBackward(pieceId);
-    const forwardPossible = possibleMoves.includes(pieceId);
-    
-    if (backwardPossible || forwardPossible) {
+    // Si le dé n'a pas encore été lancé, ne rien faire
+    if (!gameState.diceValue) {
+      showInfo('Lancez le dé', 'Veuillez d\'abord lancer le dé pour jouer.');
+      return;
+    }
+
+    // Si le joueur actuel n'est pas celui qui joue, ne rien faire
+    if (gameState.currentPlayer?.id !== playerId) {
+      showInfo('Ce n\'est pas votre tour', 'Attendez votre tour pour jouer.');
+      return;
+    }
+
+    // Si le pion est dans la liste des mouvements possibles, le sélectionner
+    if (possibleMoves.includes(pieceId)) {
       setSelectedPiece(pieceId);
-      const direction = backwardPossible ? 'backward' : 'forward';
-      setMoveDirection(direction);
       
-      // Si un seul mouvement est possible, confirmer automatiquement
-      if ((backwardPossible && !forwardPossible) || (!backwardPossible && forwardPossible)) {
-        onMovePiece(pieceId, direction, gameRules);
+      // Si le pion est en base, le sortir directement (cas du 6)
+      const piece = gameState.currentPlayer?.pieces?.find(p => p.id === pieceId);
+      if (piece?.position === 'base' && gameState.diceValue === 6) {
+        onMovePiece(pieceId, 'forward', gameRules);
         setSelectedPiece(null);
-        setPossibleMoves([]);
+      } else {
+        // Pour les autres cas, demander la confirmation du déplacement
+        showInfo('Confirmer le déplacement', `Déplacer le pion de ${gameState.diceValue} cases ?`);
       }
+    } 
+    // Si on clique sur un pion déjà sélectionné, changer la direction
+    else if (selectedPiece === pieceId) {
+      const newDirection = moveDirection === 'forward' ? 'backward' : 'forward';
+      setMoveDirection(newDirection);
+      showInfo('Changement de direction', `Le pion se déplacera vers l'${newDirection === 'forward' ? 'avant' : 'arrière'}.`);
     } else {
       showError('Mouvement invalide', 'Ce pion ne peut pas bouger avec cette valeur de dé.');
     }
-  }, [gameState.currentPlayer.id, playerId, possibleMoves, canCaptureBackward, showError, gameRules, onMovePiece]);
+  }, [
+    gameState.diceValue, 
+    gameState.currentPlayer?.id, 
+    gameState.currentPlayer?.pieces, 
+    playerId, 
+    possibleMoves, 
+    selectedPiece, 
+    moveDirection, 
+    onMovePiece, 
+    gameRules, 
+    showInfo, 
+    showError
+  ]);
 
   const confirmMove = useCallback((direction: 'forward' | 'backward') => {
     if (selectedPiece) {

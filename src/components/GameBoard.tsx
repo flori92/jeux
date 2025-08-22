@@ -24,11 +24,27 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     if (gameState.board && Array.isArray(gameState.board)) {
       setBoard(gameState.board);
     } else {
-      // Fallback: create empty board
+      // Fallback: create empty board if no board is provided
       const newBoard = Array(8).fill(null).map(() => Array(8).fill(null));
+      
+      // If we have pieces but no board, place pieces on the board
+      if (gameState.pieces) {
+        const allPieces = Object.values(gameState.pieces).flat();
+        if (Array.isArray(allPieces)) {
+          allPieces.forEach((piece: Piece) => {
+            if (piece && piece.position) {
+              const [row, col] = piece.position;
+              if (row >= 0 && row < 8 && col >= 0 && col < 8) {
+                newBoard[row][col] = piece;
+              }
+            }
+          });
+        }
+      }
+      
       setBoard(newBoard);
     }
-  }, [gameState.board, gameState.id]);
+  }, [gameState.board, gameState.pieces, gameState.id]);
 
   const handleSquareClick = (row: number, col: number) => {
     // If it's not the current player's turn, do nothing

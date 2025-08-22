@@ -17,6 +17,7 @@ export type GameState = {
   currentPlayer: string;
   status: 'waiting' | 'playing' | 'finished' | 'active';
   board?: (Piece | null)[][] | null;
+  pieces?: Record<string, Piece[]>; // Added pieces property
   winner?: string;
   gameType?: 'checkers' | 'ludo';
   diceValue?: number | null;
