@@ -310,7 +310,7 @@ const Game: React.FC = () => {
       };
       setGameState(aiGameState);
     }
-  }, [player, gameMode, connect, disconnect, gameId, gameType]);
+  }, [player, gameMode, gameId, gameType, connect, disconnect]);
 
   const handleMove = (move: Move) => {
     if (gameMode === 'multiplayer' && gameState && player && gameId) {

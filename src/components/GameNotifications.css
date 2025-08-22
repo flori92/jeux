@@ -1,0 +1,147 @@
+.game-notifications {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notification {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: slideIn 0.3s ease-out;
+  min-height: 60px;
+}
+
+.notification:hover {
+  transform: translateX(-5px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.notification-success {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border-left: 4px solid #28a745;
+  color: #155724;
+}
+
+.notification-error {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  border-left: 4px solid #dc3545;
+  color: #721c24;
+}
+
+.notification-warning {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border-left: 4px solid #ffc107;
+  color: #856404;
+}
+
+.notification-info {
+  background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+  border-left: 4px solid #17a2b8;
+  color: #0c5460;
+}
+
+.notification-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-title {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.notification-message {
+  font-size: 14px;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.notification-close:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.notification.removing {
+  animation: slideOut 0.3s ease-in forwards;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .game-notifications {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+  
+  .notification {
+    padding: 12px;
+  }
+  
+  .notification-title {
+    font-size: 15px;
+  }
+  
+  .notification-message {
+    font-size: 13px;
+  }
+}

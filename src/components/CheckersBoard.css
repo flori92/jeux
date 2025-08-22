@@ -1,0 +1,237 @@
+.checkers-board-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.checkers-game-info {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.checkers-game-info h3 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 24px;
+}
+
+.current-player {
+  font-size: 18px;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.game-status {
+  font-size: 16px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: #e3f2fd;
+  color: #1976d2;
+  display: inline-block;
+}
+
+.checkers-board {
+  border: 3px solid #8b4513;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.checkers-row {
+  display: flex;
+}
+
+.checkers-square {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checkers-square.light {
+  background-color: #f0d9b5;
+}
+
+.checkers-square.dark {
+  background-color: #b58863;
+}
+
+.checkers-square.selected {
+  background-color: #ffeb3b !important;
+  box-shadow: inset 0 0 0 3px #ff9800;
+}
+
+.checkers-square.possible-move {
+  background-color: #4caf50 !important;
+  box-shadow: inset 0 0 0 2px #2e7d32;
+}
+
+.checkers-square.possible-move::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.checkers-piece {
+  width: 80%;
+  height: 80%;
+  border-radius: 50%;
+  border: 2px solid #333;
+  position: relative;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.checkers-piece:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.checkers-piece.white {
+  background: linear-gradient(145deg, #ffffff, #e0e0e0);
+  border-color: #666;
+}
+
+.checkers-piece.black {
+  background: linear-gradient(145deg, #424242, #212121);
+  border-color: #888;
+}
+
+.checkers-piece.king::after {
+  content: '♔';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.checkers-piece.white.king::after {
+  color: #333;
+}
+
+.checkers-piece.black.king::after {
+  color: #fff;
+}
+
+.players-info {
+  margin-top: 20px;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.player-info {
+  padding: 12px 20px;
+  border-radius: 8px;
+  background: white;
+  border: 2px solid #ddd;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.player-info.active {
+  border-color: #4caf50;
+  background: #f1f8e9;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.player-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #333;
+}
+
+.player-color.white {
+  background: #fff;
+}
+
+.player-color.black {
+  background: #333;
+}
+
+.pieces-count {
+  font-size: 14px;
+  color: #666;
+  margin-left: 10px;
+}
+
+.checkers-game-over {
+  text-align: center;
+  padding: 40px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.checkers-game-over h2 {
+  color: #4caf50;
+  margin-bottom: 20px;
+}
+
+.checkers-game-over p {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.final-scores {
+  background: #f5f5f5;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.score-line {
+  padding: 8px 0;
+  font-size: 16px;
+  border-bottom: 1px solid #ddd;
+}
+
+.score-line:last-child {
+  border-bottom: none;
+}
+
+.capture-indicator {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 15px;
+  height: 15px;
+  background: #f44336;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.mandatory-capture {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Square } from './Square';
+import './CheckersBoard.css';
 import type { GameState, Piece, Move } from '../types/game.types';
 
 interface GameBoardProps {
@@ -20,22 +20,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const [board, setBoard] = useState<(Piece | null)[][]>([]);
 
   useEffect(() => {
-    // Initialize the board
-    const newBoard = Array(8).fill(null).map(() => Array(8).fill(null));
-    
-    // Place pieces on the board
-    if (gameState.board) {
-      gameState.board.flat().forEach((piece: Piece | null) => {
-        if (!piece) return;
-        const [x, y] = piece.position;
-        if (x >= 0 && x < 8 && y >= 0 && y < 8) {
-          newBoard[x][y] = piece;
-        }
-      });
+    // Initialize the board directly from gameState.board
+    if (gameState.board && Array.isArray(gameState.board)) {
+      setBoard(gameState.board);
+    } else {
+      // Fallback: create empty board
+      const newBoard = Array(8).fill(null).map(() => Array(8).fill(null));
+      setBoard(newBoard);
     }
-    
-    setBoard(newBoard);
-  }, [gameState]);
+  }, [gameState.board, gameState.id]);
 
   const handleSquareClick = (row: number, col: number) => {
     // If it's not the current player's turn, do nothing
@@ -83,36 +76,55 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   const calculatePossibleMoves = (row: number, col: number, piece: Piece) => {
-    const directions = piece.isKing 
-      ? [[-1, -1], [-1, 1], [1, -1], [1, 1]]
-      : piece.playerId === '1' 
-        ? [[1, -1], [1, 1]] 
-        : [[-1, -1], [-1, 1]];
-
     const moves: [number, number][] = [];
     
+    // Determine player color from gameState
+    const player = gameState.players.find(p => p.id === piece.playerId);
+    const isWhite = player?.color === 'white';
+    
+    // Define movement directions based on piece type and color
+    const directions = piece.isKing 
+      ? [[-1, -1], [-1, 1], [1, -1], [1, 1]]  // Kings move in all directions
+      : isWhite 
+        ? [[-1, -1], [-1, 1]]  // White moves up (decreasing row)
+        : [[1, -1], [1, 1]];   // Black moves down (increasing row)
+
+    // First check for captures (they are mandatory)
+    const captures: [number, number][] = [];
+    
+    for (const [dx, dy] of [[-2, -2], [-2, 2], [2, -2], [2, 2]]) {
+      const captureRow = row + dx;
+      const captureCol = col + dy;
+      const jumpedRow = row + dx / 2;
+      const jumpedCol = col + dy / 2;
+      
+      if (
+        isValidPosition(captureRow, captureCol) &&
+        isValidPosition(jumpedRow, jumpedCol) &&
+        !board[captureRow][captureCol] &&
+        board[jumpedRow][jumpedCol] &&
+        board[jumpedRow][jumpedCol]?.playerId !== piece.playerId
+      ) {
+        // Verify direction is valid for non-kings
+        if (piece.isKing || directions.some(([ddx, ddy]) => ddx === dx / 2 && ddy === dy / 2)) {
+          captures.push([captureRow, captureCol]);
+        }
+      }
+    }
+    
+    // If captures are available, only show captures (mandatory)
+    if (captures.length > 0) {
+      setPossibleMoves(captures);
+      return;
+    }
+    
+    // Otherwise, show normal moves
     for (const [dx, dy] of directions) {
-      // Check normal moves (one square)
       const newRow = row + dx;
       const newCol = col + dy;
       
       if (isValidPosition(newRow, newCol) && !board[newRow][newCol]) {
         moves.push([newRow, newCol]);
-      }
-      
-      // Check capture moves (two squares)
-      const captureRow = row + 2 * dx;
-      const captureCol = col + 2 * dy;
-      const jumpedRow = row + dx;
-      const jumpedCol = col + dy;
-      
-      if (
-        isValidPosition(captureRow, captureCol) &&
-        !board[captureRow][captureCol] &&
-        board[jumpedRow]?.[jumpedCol] &&
-        board[jumpedRow][jumpedCol]?.playerId !== piece.playerId
-      ) {
-        moves.push([captureRow, captureCol]);
       }
     }
     
@@ -131,23 +143,76 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     return selectedPiece ? selectedPiece[0] === row && selectedPiece[1] === col : false;
   };
 
+  const renderSquare = (piece: Piece | null, row: number, col: number) => {
+    const isDark = (row + col) % 2 === 1;
+    const isSquareSelected = isSelected(row, col);
+    const isSquarePossibleMove = isPossibleMove(row, col);
+    
+    return (
+      <div
+        key={`${row}-${col}`}
+        className={`checkers-square ${isDark ? 'dark' : 'light'} ${
+          isSquareSelected ? 'selected' : ''
+        } ${isSquarePossibleMove ? 'possible-move' : ''}`}
+        onClick={() => handleSquareClick(row, col)}
+      >
+        {piece && (
+          <div
+            className={`checkers-piece ${
+              gameState.players.find(p => p.id === piece.playerId)?.color || 'white'
+            } ${piece.isKing ? 'king' : ''}`}
+          />
+        )}
+      </div>
+    );
+  };
+
+  if (gameState.winner) {
+    const winner = gameState.players.find(p => p.id === gameState.winner);
+    return (
+      <div className="checkers-game-over">
+        <h2>🎉 Partie Terminée !</h2>
+        <p>
+          <strong>{winner?.name || 'Joueur inconnu'}</strong> a gagné !
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ display: 'inline-block', border: '2px solid #333' }}>
-      {board.map((row, rowIndex) => (
-        <div key={rowIndex} style={{ display: 'flex' }}>
-          {row.map((piece, colIndex) => (
-            <Square
-              key={`${rowIndex}-${colIndex}`}
-              piece={piece}
-              isSelected={isSelected(rowIndex, colIndex)}
-              isPossibleMove={isPossibleMove(rowIndex, colIndex)}
-              onClick={() => handleSquareClick(rowIndex, colIndex)}
-              row={rowIndex}
-              col={colIndex}
-            />
-          ))}
+    <div className="checkers-board-container">
+      <div className="checkers-game-info">
+        <h3>Partie de Dames</h3>
+        <div className="current-player">
+          Tour de : <span style={{ color: gameState.players.find(p => p.id === currentPlayerId)?.color }}>
+            {gameState.players.find(p => p.id === currentPlayerId)?.name || 'Joueur'}
+          </span>
         </div>
-      ))}
+        <div className="game-status">
+          {gameState.status === 'playing' ? 'En cours' : 'En attente'}
+        </div>
+      </div>
+
+      <div className="checkers-board">
+        {board.map((row, rowIndex) => (
+          <div key={rowIndex} className="checkers-row">
+            {row.map((piece, colIndex) => renderSquare(piece, rowIndex, colIndex))}
+          </div>
+        ))}
+      </div>
+
+      <div className="players-info">
+        {gameState.players.map(player => {
+          const playerPieces = board.flat().filter(p => p && p.playerId === player.id);
+          return (
+            <div key={player.id} className={`player-info ${player.id === currentPlayerId ? 'active' : ''}`}>
+              <div className={`player-color ${player.color}`}></div>
+              <span>{player.name}</span>
+              <span className="pieces-count">Pièces: {playerPieces.length}</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

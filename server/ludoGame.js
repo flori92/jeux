@@ -209,144 +209,153 @@ class LudoGame {
     return 'normal';
   }
 
-  movePiece(playerId, pieceId) {
-    const player = this.players[this.currentPlayerIndex];
-    
-    if (!player || player.id !== playerId) {
-      return { error: 'Ce n\'est pas votre tour' };
+  findPiece(pieceId) {
+    for (const player of this.players) {
+      const piece = player.pieces.find(p => p.id === pieceId);
+      if (piece) return piece;
     }
-
-    if (this.canRollDice) {
-      return { error: 'Vous devez d\'abord lancer le dé' };
-    }
-
-    // Vérifier si le mouvement est dans les mouvements possibles
-    const move = this.possibleMoves.find(m => m.pieceId === pieceId);
-    if (!move) {
-      return { error: 'Mouvement invalide' };
-    }
-
-    // Trouver le pion
-    const piece = player.pieces.find(p => p.id === pieceId);
-    if (!piece) {
-      return { error: 'Pion introuvable' };
-    }
-
-    // Effectuer le déplacement
-    const previousPosition = piece.position;
-    
-    // Gérer la capture d'un pion adverse
-    if (typeof move.to === 'number' && !this.board.safeZones.includes(move.to)) {
-      this.handleCapture(move.to, player.color);
-    }
-
-    // Mettre à jour la position du pion
-    piece.position = move.to;
-    if (move.type === 'start') {
-      piece.isInPlay = true;
-    } else if (move.type === 'finish') {
-      player.finishedPieces++;
-      piece.position = 'finished';
-      
-      // Vérifier la victoire
-      if (player.finishedPieces === 4) {
-        this.winner = player;
-        this.gameStatus = 'finished';
-      }
-    }
-
-    // Mettre à jour la distance parcourue
-    if (typeof previousPosition === 'number' && typeof move.to === 'number') {
-      piece.distanceTraveled += this.diceValue;
-    }
-
-    this.lastMove = {
-      playerId,
-      pieceId,
-      from: previousPosition,
-      to: move.to,
-      diceValue: this.diceValue
-    };
-
-    // Gérer le tour suivant
-    if (this.diceValue === 6 && this.consecutiveSixes < 3) {
-      this.canRollDice = true;
-      this.mustMoveAfterDice = false;
-    } else {
-      this.nextTurn();
-    }
-
-    return { 
-      success: true,
-      move: this.lastMove,
-      gameState: this.getGameState() 
-    };
+    return null;
   }
 
-  handleCapture(position, attackerColor) {
+  validateAndMovePiece(piece, diceValue) {
+    // Pion en base - doit sortir avec un 6
+    if (piece.position === 'base') {
+      if (diceValue !== 6) {
+        return { valid: false, error: 'Un 6 est nécessaire pour sortir de la base' };
+      }
+      return { valid: true, newPosition: this.getStartPosition(piece.playerId), type: 'start' };
+    }
+
+    // Calculer la nouvelle position
+    const newPosition = this.calculateNewPosition(piece, diceValue);
+    
+    // Vérifier si le mouvement est valide
+    if (newPosition === null) {
+      return { valid: false, error: 'Mouvement impossible' };
+    }
+
+    return { valid: true, newPosition, type: 'normal' };
+  }
+
+  getStartPosition(playerId) {
+    const playerIndex = this.players.findIndex(p => p.id === playerId);
+    const startPositions = [1, 14, 27, 40]; // Positions de départ pour chaque joueur
+    return startPositions[playerIndex];
+  }
+
+  calculateNewPosition(piece, diceValue) {
+    if (piece.position === 'base') return null;
+    
+    const currentPos = piece.position;
+    const newPos = currentPos + diceValue;
+    
+    // Vérifier si le pion atteint la zone de fin
+    const maxPosition = this.getMaxPosition(piece.playerId);
+    if (newPos > maxPosition) {
+      return null; // Mouvement impossible
+    }
+    
+    if (newPos === maxPosition) {
+      return 'finished';
+    }
+    
+    return newPos > 52 ? newPos - 52 : newPos; // Boucle autour du plateau
+  }
+
+  getMaxPosition(playerId) {
+    const playerIndex = this.players.findIndex(p => p.id === playerId);
+    return 52 + (6 * playerIndex); // 52 cases + 6 cases de fin par joueur
+  }
+
+  movePiece(piece, newPosition) {
+    piece.position = newPosition;
+  }
+
+  checkCaptures(piece, newPosition) {
+    if (newPosition === 'base' || newPosition === 'finished') return false;
+    
+    // Vérifier les zones de sécurité
+    const safeZones = [1, 9, 14, 22, 27, 35, 40, 48];
+    if (safeZones.includes(newPosition)) return false;
+
+    // Chercher des pions adverses sur la même case
     for (const player of this.players) {
-      if (player.color === attackerColor) continue;
+      if (player.id === piece.playerId) continue;
       
-      for (const piece of player.pieces) {
-        if (piece.position === position) {
-          // Renvoyer le pion à la base
-          piece.position = 'base';
-          piece.isInPlay = false;
-          piece.distanceTraveled = 0;
-          break;
+      for (const enemyPiece of player.pieces) {
+        if (enemyPiece.position === newPosition) {
+          // Capturer le pion adverse
+          enemyPiece.position = 'base';
+          return true;
         }
       }
     }
+    
+    return false;
   }
 
-  nextTurn() {
-    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
-    this.diceValue = null;
-    this.consecutiveSixes = 0;
-    this.canRollDice = true;
-    this.mustMoveAfterDice = false;
-    this.possibleMoves = [];
-  }
-
-  getGameState() {
-    return {
-      players: this.players.map(p => ({
-        id: p.id,
-        name: p.name,
-        color: p.color,
-        pieces: p.pieces,
-        finishedPieces: p.finishedPieces,
-        isActive: p.isActive
-      })),
-      currentPlayerIndex: this.currentPlayerIndex,
-      currentPlayer: this.players[this.currentPlayerIndex],
-      diceValue: this.diceValue,
-      gameStatus: this.gameStatus,
-      winner: this.winner,
-      lastMove: this.lastMove,
-      canRollDice: this.canRollDice,
-      possibleMoves: this.possibleMoves,
-      consecutiveSixes: this.consecutiveSixes
-    };
-  }
-
-  removePlayer(playerId) {
-    const playerIndex = this.players.findIndex(p => p.id === playerId);
-    if (playerIndex !== -1) {
-      this.players[playerIndex].isActive = false;
-      
-      // Si c'était le tour de ce joueur, passer au suivant
-      if (playerIndex === this.currentPlayerIndex) {
-        this.nextTurn();
-      }
-      
-      // Si il ne reste qu'un joueur actif, il gagne
-      const activePlayers = this.players.filter(p => p.isActive);
-      if (activePlayers.length === 1) {
-        this.winner = activePlayers[0];
-        this.gameStatus = 'finished';
+  checkWinCondition() {
+    for (const player of this.players) {
+      const finishedPieces = player.pieces.filter(p => p.position === 'finished').length;
+      if (finishedPieces === 4) {
+        return player.id;
       }
     }
+    return null;
+  }
+
+  makeMove(playerId, pieceId) {
+    if (this.status !== 'playing') {
+      return { valid: false, error: 'La partie n\'est pas en cours' };
+    }
+    
+    if (!this.isPlayerTurn(playerId)) {
+      return { valid: false, error: 'Ce n\'est pas votre tour' };
+    }
+
+    if (!this.diceValue) {
+      return { valid: false, error: 'Vous devez lancer le dé d\'abord' };
+    }
+
+    const piece = this.findPiece(pieceId);
+    if (!piece || piece.playerId !== playerId) {
+      return { valid: false, error: 'Pion invalide' };
+    }
+
+    // Valider le mouvement
+    const moveResult = this.validateAndMovePiece(piece, this.diceValue);
+    if (!moveResult.valid) {
+      return moveResult;
+    }
+
+    // Effectuer le mouvement
+    this.movePiece(piece, moveResult.newPosition);
+
+    // Vérifier les captures
+    const captured = this.checkCaptures(piece, moveResult.newPosition);
+
+    // Vérifier les conditions de victoire
+    const winner = this.checkWinCondition();
+    if (winner) {
+      this.status = 'finished';
+      this.winner = winner;
+      return { valid: true, gameOver: true, winner };
+    }
+
+    // Gérer le tour suivant
+    const shouldRollAgain = this.diceValue === 6 || captured;
+    if (!shouldRollAgain) {
+      this.switchPlayer();
+    }
+
+    this.diceValue = null;
+    this.canRollDice = true;
+    
+    return { 
+      valid: true, 
+      rollAgain: shouldRollAgain,
+      captured: captured
+    };
   }
 }
 

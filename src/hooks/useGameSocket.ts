@@ -84,33 +84,39 @@ export const useGameSocket = ({
 
   useEffect(() => {
     // Gestion des événements du serveur
-    socket.on('gameStateUpdate', (data: { gameState: GameState }) => {
+    const handleGameStateUpdate = (data: { gameState: GameState }) => {
       onGameStateUpdate(data.gameState);
-    });
+    };
 
-    socket.on('inviteReceived', (data: { invite: { id: string; from: string; gameId: string } }) => {
+    const handleInviteReceived = (data: { invite: { id: string; from: string; gameId: string } }) => {
       onInviteReceived(data.invite);
-    });
+    };
 
-    socket.on('gameStarted', (data: { gameState: GameState }) => {
+    const handleGameStarted = (data: { gameState: GameState }) => {
       onGameStart(data.gameState);
-    });
+    };
 
-    socket.on('opponentLeft', () => {
+    const handleOpponentLeft = () => {
       onOpponentLeft();
-    });
+    };
 
-    socket.on('error', (data: { message: string }) => {
+    const handleError = (data: { message: string }) => {
       onError(data.message);
-    });
+    };
+
+    socket.on('gameStateUpdate', handleGameStateUpdate);
+    socket.on('inviteReceived', handleInviteReceived);
+    socket.on('gameStarted', handleGameStarted);
+    socket.on('opponentLeft', handleOpponentLeft);
+    socket.on('error', handleError);
 
     // Nettoyage
     return () => {
-      socket.off('gameStateUpdate');
-      socket.off('inviteReceived');
-      socket.off('gameStarted');
-      socket.off('opponentLeft');
-      socket.off('error');
+      socket.off('gameStateUpdate', handleGameStateUpdate);
+      socket.off('inviteReceived', handleInviteReceived);
+      socket.off('gameStarted', handleGameStarted);
+      socket.off('opponentLeft', handleOpponentLeft);
+      socket.off('error', handleError);
     };
   }, [socket, onGameStateUpdate, onInviteReceived, onGameStart, onOpponentLeft, onError]);
 

@@ -101,6 +101,8 @@
   cursor: pointer;
   transition: all 0.3s ease;
   width: 100%;
+  position: relative;
+  z-index: 10;
 }
 
 .btn-primary {

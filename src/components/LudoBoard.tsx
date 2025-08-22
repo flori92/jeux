@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './LudoBoard.css';
+import GameNotifications from './GameNotifications';
+import { useNotifications } from '../hooks/useNotifications';
 
 interface LudoPiece {
   id: string;
@@ -43,24 +45,52 @@ interface LudoBoardProps {
   onMovePiece: (pieceId: string) => void;
 }
 
-const LudoBoard: React.FC<LudoBoardProps> = ({
-  gameState,
-  playerId,
-  onRollDice,
-  onMovePiece,
-}) => {
+const LudoBoard: React.FC<LudoBoardProps> = ({ gameState, playerId, onRollDice, onMovePiece }) => {
   const [selectedPiece, setSelectedPiece] = useState<string | null>(null);
+  const [possibleMoves, setPossibleMoves] = useState<string[]>([]);
+  const { notifications, removeNotification, showError, showInfo } = useNotifications();
+
+  // Calculer les mouvements possibles quand le dé est lancé
+  useEffect(() => {
+    if (gameState.diceValue && gameState.currentPlayer.id === playerId) {
+      const movablePieces: string[] = [];
+      
+      gameState.currentPlayer.pieces.forEach(piece => {
+        // Pion en base - peut sortir avec un 6
+        if (piece.position === 'base' && gameState.diceValue === 6) {
+          movablePieces.push(piece.id);
+        }
+        // Pion en jeu - peut bouger si le mouvement est valide
+        else if (piece.position !== 'base' && piece.position !== 'finished') {
+          // Vérification simplifiée - dans un vrai jeu, il faudrait vérifier les collisions
+          movablePieces.push(piece.id);
+        }
+      });
+      
+      setPossibleMoves(movablePieces);
+      
+      if (movablePieces.length === 0) {
+        showInfo('Aucun mouvement possible', `Avec un ${gameState.diceValue}, aucun pion ne peut bouger.`);
+      }
+    } else {
+      setPossibleMoves([]);
+    }
+  }, [gameState.diceValue, gameState.currentPlayer, playerId, showInfo]);
 
   const handlePieceClick = (pieceId: string) => {
-    if (gameState.currentPlayer.id === playerId) {
+    if (gameState.currentPlayer.id === playerId && possibleMoves.includes(pieceId)) {
       setSelectedPiece(pieceId);
       onMovePiece(pieceId);
+      setPossibleMoves([]); // Réinitialiser après le mouvement
+    } else if (gameState.currentPlayer.id === playerId && !possibleMoves.includes(pieceId)) {
+      showError('Mouvement invalide', 'Ce pion ne peut pas bouger avec cette valeur de dé.');
     }
   };
 
   const handleRollDice = () => {
     if (gameState.canRollDice && gameState.currentPlayer.id === playerId) {
       onRollDice();
+      setSelectedPiece(null);
     }
   };
 
@@ -105,9 +135,11 @@ const LudoBoard: React.FC<LudoBoardProps> = ({
           {piecesOnCell.map(piece => (
             <div
               key={piece.id}
-              className={`piece ${color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`}
+              className={`piece ${color}-piece ${selectedPiece === piece.id ? 'selected' : ''} ${possibleMoves.includes(piece.id) ? 'movable' : ''}`}
               onClick={() => handlePieceClick(piece.id)}
-            />
+            >
+              {piece.id.split('-')[1]}
+            </div>
           ))}
         </div>
       );
@@ -123,61 +155,9 @@ const LudoBoard: React.FC<LudoBoardProps> = ({
     );
   };
 
-  if (gameState.winner) {
+  const renderPath = () => {
     return (
-      <div className="ludo-game-over">
-        <h2>🎉 Partie Terminée !</h2>
-        <p>
-          <strong>{gameState.winner.name}</strong> a gagné !
-        </p>
-        <div className="final-scores">
-          {gameState.players
-            .sort((a, b) => b.finishedPieces - a.finishedPieces)
-            .map((player, index) => (
-              <div key={player.id} className="score-line">
-                {index + 1}. {player.name} - {player.finishedPieces}/4 pions
-              </div>
-            ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="ludo-board-container">
-      <div className="game-info">
-        <h3>Partie de Ludo</h3>
-        <div className="current-player">
-          Tour de : <span style={{ color: gameState.currentPlayer.color }}>
-            {gameState.currentPlayer.name}
-          </span>
-        </div>
-        {gameState.diceValue && (
-          <div className="dice-result">
-            Dé : {gameState.diceValue}
-          </div>
-        )}
-        {isMyTurn && gameState.canRollDice && (
-          <button 
-            className="dice-button"
-            onClick={handleRollDice}
-          >
-            🎲 Lancer le dé
-          </button>
-        )}
-      </div>
-
-      <div className="ludo-game-board">
-        {/* Base Rouge (en haut à gauche) */}
-        <div className="corner top-left">
-          {renderBase('red', gameState.players.find(p => p.color === 'red')?.pieces || [])}
-        </div>
-        
-        {/* Chemin de maison Rouge (vertical) */}
-        <div className="home-path home-path-red vertical">
-          {renderHomePath('red')}
-        </div>
-        
+      <div className="path-grid">
         {/* Base Bleue (en haut à droite) */}
         <div className="corner top-right">
           {renderBase('blue', gameState.players.find(p => p.color === 'blue')?.pieces || [])}
@@ -365,6 +345,32 @@ const LudoBoard: React.FC<LudoBoardProps> = ({
             <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
           ))}
         </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="ludo-board">
+      <GameNotifications 
+        notifications={notifications} 
+        onRemoveNotification={removeNotification} 
+      />
+      
+      <div className="game-container">
+        {renderPath()}
+      </div>
+
+      <div className="game-controls">
+        <button 
+          onClick={handleRollDice}
+          disabled={!gameState.canRollDice || !isMyTurn}
+          className="dice-button"
+        >
+          Lancer le dé
+        </button>
+        {gameState.diceValue && (
+          <div className="dice-value">Dé: {gameState.diceValue}</div>
+        )}
       </div>
 
       <div className="players-info">
