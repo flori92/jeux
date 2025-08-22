@@ -1,0 +1,202 @@
+/* Conteneur principal du panneau latéral */
+.side-board {
+  width: 300px;
+  height: 100%;
+  background-color: #f5f5f5;
+  border-left: 1px solid #e0e0e0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+/* En-tête du panneau */
+.side-board h3 {
+  color: #333;
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
+}
+
+/* Section d'état du jeu */
+.game-status {
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* Indicateur d'état */
+.status-indicator {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 15px;
+}
+
+.status-indicator.waiting {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-indicator.playing {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-indicator.finished {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+/* Bannière du gagnant */
+.winner-banner {
+  background: linear-gradient(135deg, #ffd700, #ffa500);
+  color: #000;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+  font-weight: bold;
+  margin-top: 10px;
+  animation: pulse 2s infinite;
+}
+
+/* Section du dé */
+.dice-container {
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+.dice-value {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #333;
+  margin: 15px 0;
+  min-height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Bouton de lancer de dé */
+.roll-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 1rem;
+  margin: 10px 0;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.roll-button:hover:not(:disabled) {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.roll-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Liste des joueurs */
+.players-list {
+  flex-grow: 1;
+  margin-bottom: 20px;
+  overflow-y: auto;
+}
+
+.players {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Carte de joueur */
+.player-card {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  border-left: 4px solid transparent;
+}
+
+.player-card.current {
+  border-left: 4px solid #4CAF50;
+  background-color: #f0f9f0;
+}
+
+.player-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-right: 10px;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.player-info {
+  flex-grow: 1;
+}
+
+.player-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.player-score, .player-pieces {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* Section des actions du jeu */
+.game-actions {
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.action-button {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  background-color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.action-button:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-1px);
+}
+
+/* Animation de pulsation */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}

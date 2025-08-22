@@ -1,0 +1,116 @@
+/* Styles pour les rails */
+
+/* Conteneur des rails */
+.rail-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* Styles communs pour les rails horizontaux et verticaux */
+.h-rail,
+.v-rail {
+  position: relative;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+/* Styles spécifiques pour les rails horizontaux */
+.h-rail {
+  margin: 10px 0;
+}
+
+/* Styles spécifiques pour les rails verticaux */
+.v-rail {
+  margin: 0 10px;
+}
+
+/* Cellules des rails */
+.rail-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Styles pour les pièces dans les rails */
+.rail-cell .piece {
+  width: 80%;
+  height: 80%;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 10;
+}
+
+/* Effet de survol sur les pièces */
+.rail-cell .piece:not(.disabled):hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  z-index: 20;
+}
+
+/* Style pour les pièces sélectionnées */
+.rail-cell .piece.selected {
+  transform: scale(1.2);
+  box-shadow: 0 0 15px gold, 0 0 5px rgba(255, 215, 0, 0.5);
+  z-index: 30;
+}
+
+/* Style pour les pièces déplaçables */
+.rail-cell .piece.movable {
+  animation: pulse 1.5s infinite;
+  cursor: pointer;
+}
+
+/* Animation de pulsation pour les pièces déplaçables */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Désactivation des interactions */
+.rail-cell .piece.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Styles spécifiques pour les rails désactivés */
+.h-rail.disabled,
+.v-rail.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Styles pour les coins du plateau */
+.rail-corner {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  z-index: 5;
+}
+
+/* Positionnement des coins */
+.rail-corner.top-left {
+  top: -5px;
+  left: -5px;
+}
+
+.rail-corner.top-right {
+  top: -5px;
+  right: -5px;
+}
+
+.rail-corner.bottom-left {
+  bottom: -5px;
+  left: -5px;
+}
+
+.rail-corner.bottom-right {
+  bottom: -5px;
+  right: -5px;
+}

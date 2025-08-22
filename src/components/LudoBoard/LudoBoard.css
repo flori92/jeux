@@ -1,0 +1,229 @@
+/* Conteneur principal du jeu */
+.ludo-game-container {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  width: 100%;
+  background-color: #f0f0f0;
+  overflow: hidden;
+}
+
+/* Plateau de jeu */
+.game-board {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background-color: #2c3e50;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Style de base pour les pièces */
+.piece {
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: bold;
+  user-select: none;
+}
+
+/* Style pour les pièces sélectionnées */
+.piece.selected {
+  transform: scale(1.2);
+  box-shadow: 0 0 15px gold, 0 0 5px rgba(255, 215, 0, 0.7);
+  z-index: 100;
+}
+
+/* Style pour les pièces déplaçables */
+.piece.movable {
+  animation: pulse 1.5s infinite;
+  cursor: pointer;
+}
+
+/* Animation de pulsation */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Style pour les pièces désactivées */
+.piece.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Style pour les couleurs des joueurs */
+.piece.red { background-color: #e74c3c; }
+.piece.blue { background-color: #3498db; }
+.piece.green { background-color: #2ecc71; }
+.piece.yellow { background-color: #f1c40f; }
+
+/* Style pour le plateau de jeu */
+.board {
+  position: relative;
+  width: 800px;
+  height: 800px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+/* Style pour les zones de départ (maisons) */
+.house {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+/* Positionnement des maisons */
+.house-1 { top: 50px; left: 50px; background-color: rgba(231, 76, 60, 0.2); }
+.house-2 { top: 50px; right: 50px; background-color: rgba(52, 152, 219, 0.2); }
+.house-3 { bottom: 50px; left: 50px; background-color: rgba(241, 196, 15, 0.2); }
+.house-4 { bottom: 50px; right: 50px; background-color: rgba(46, 204, 113, 0.2); }
+
+/* Style pour les chemins (rails) */
+.path {
+  position: absolute;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Chemin horizontal */
+.path-horizontal {
+  height: 60px;
+  width: 200px;
+  left: 300px;
+}
+
+/* Chemin vertical */
+.path-vertical {
+  width: 60px;
+  height: 200px;
+  top: 300px;
+}
+
+/* Positionnement des chemins */
+.path-1 { top: 50px; }
+.path-2 { right: 50px; transform: rotate(90deg); transform-origin: top right; }
+.path-3 { bottom: 50px; transform: rotate(180deg); transform-origin: bottom right; }
+.path-4 { left: 50px; transform: rotate(270deg); transform-origin: bottom left; }
+
+/* Zone centrale */
+.center-area {
+  position: absolute;
+  top: 300px;
+  left: 300px;
+  width: 200px;
+  height: 200px;
+  background-color: #f1f1f1;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Style pour le dé */
+.dice {
+  width: 60px;
+  height: 60px;
+  background-color: white;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dice:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Style pour les messages d'information */
+.game-message {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  margin: 0 20px;
+}
+
+/* Style pour les boutons d'action */
+.action-button {
+  padding: 10px 20px;
+  margin: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #3498db;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.action-button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Style pour les cellules du plateau */
+.cell {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.5);
+  user-select: none;
+}
+
+/* Style pour les cellules spéciales (départ, arrivée, etc.) */
+.cell.start { background-color: rgba(46, 204, 113, 0.2); }
+.cell.home { background-color: rgba(155, 89, 182, 0.2); }
+.cell.safe { background-color: rgba(52, 152, 219, 0.2); }
