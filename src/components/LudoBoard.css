@@ -57,6 +57,7 @@
   border: 4px solid #333;
   border-radius: 8px;
   overflow: hidden;
+  position: relative;
 }
 
 /* Bases dans les coins */
@@ -252,6 +253,8 @@
   justify-content: center;
   position: relative;
   min-height: 40px;
+  flex-wrap: wrap;
+  gap: 2px;
 }
 
 .start-position {

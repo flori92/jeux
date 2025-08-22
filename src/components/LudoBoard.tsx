@@ -86,38 +86,10 @@ const LudoBoard: React.FC<LudoBoardProps> = ({
     );
   };
 
-  const renderMainPath = () => {
-    const pathCells = [];
-    
-    // Créer le chemin principal de 52 cases
-    for (let i = 0; i < 52; i++) {
-      const isStartPosition = [0, 13, 26, 39].includes(i);
-      const isSafePosition = [8, 21, 34, 47].includes(i);
-      
-      // Trouver les pièces sur cette case
-      const piecesOnCell = gameState.players
-        .flatMap(p => p.pieces)
-        .filter(p => p.isInPlay && p.position === i);
-      
-      pathCells.push(
-        <div 
-          key={`path-${i}`} 
-          className={`path-cell ${isStartPosition ? 'start-position' : ''} ${isSafePosition ? 'safe-position' : ''}`}
-          data-position={i}
-        >
-          {isStartPosition && <span className="start-marker">★</span>}
-          {piecesOnCell.map(piece => (
-            <div
-              key={piece.id}
-              className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`}
-              onClick={() => handlePieceClick(piece.id)}
-            />
-          ))}
-        </div>
-      );
-    }
-    
-    return pathCells;
+  const getPiecesOnPosition = (position: number | string) => {
+    return gameState.players
+      .flatMap(p => p.pieces)
+      .filter(p => p.isInPlay && p.position === position);
   };
 
   const renderHomePath = (color: string) => {
@@ -241,9 +213,157 @@ const LudoBoard: React.FC<LudoBoardProps> = ({
           {renderBase('yellow', gameState.players.find(p => p.color === 'yellow')?.pieces || [])}
         </div>
 
-        {/* Parcours principal */}
-        <div className="main-path">
-          {renderMainPath()}
+        {/* Cases du chemin extérieur */}
+        {/* Colonne gauche (rouge) */}
+        <div className="path-cell start-position" style={{ gridColumn: 2, gridRow: 6 }} data-position="0">
+          ★ {getPiecesOnPosition(0).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 1, gridRow: 6 }} data-position="1">
+          {getPiecesOnPosition(1).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 1, gridRow: 5 }} data-position="2">
+          {getPiecesOnPosition(2).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 1, gridRow: 4 }} data-position="3">
+          {getPiecesOnPosition(3).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 1, gridRow: 3 }} data-position="4">
+          {getPiecesOnPosition(4).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell safe-position" style={{ gridColumn: 1, gridRow: 2 }} data-position="5">
+          🛡️ {getPiecesOnPosition(5).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        
+        {/* Ligne du bas (vert) */}
+        <div className="path-cell" style={{ gridColumn: 2, gridRow: 7 }} data-position="6">
+          {getPiecesOnPosition(6).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 3, gridRow: 7 }} data-position="7">
+          {getPiecesOnPosition(7).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell safe-position" style={{ gridColumn: 4, gridRow: 7 }} data-position="8">
+          🛡️ {getPiecesOnPosition(8).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 5, gridRow: 7 }} data-position="9">
+          {getPiecesOnPosition(9).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 6, gridRow: 7 }} data-position="10">
+          {getPiecesOnPosition(10).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 7, gridRow: 6 }} data-position="11">
+          {getPiecesOnPosition(11).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 7, gridRow: 5 }} data-position="12">
+          {getPiecesOnPosition(12).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        
+        {/* Colonne droite (bleu) */}
+        <div className="path-cell start-position" style={{ gridColumn: 6, gridRow: 2 }} data-position="13">
+          ★ {getPiecesOnPosition(13).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 7, gridRow: 2 }} data-position="14">
+          {getPiecesOnPosition(14).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 7, gridRow: 3 }} data-position="15">
+          {getPiecesOnPosition(15).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 7, gridRow: 4 }} data-position="16">
+          {getPiecesOnPosition(16).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 7, gridRow: 5 }} data-position="17">
+          {getPiecesOnPosition(17).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell safe-position" style={{ gridColumn: 6, gridRow: 6 }} data-position="18">
+          🛡️ {getPiecesOnPosition(18).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        
+        {/* Ligne du haut (jaune) */}
+        <div className="path-cell" style={{ gridColumn: 6, gridRow: 1 }} data-position="19">
+          {getPiecesOnPosition(19).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 5, gridRow: 1 }} data-position="20">
+          {getPiecesOnPosition(20).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell safe-position" style={{ gridColumn: 4, gridRow: 1 }} data-position="21">
+          🛡️ {getPiecesOnPosition(21).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 3, gridRow: 1 }} data-position="22">
+          {getPiecesOnPosition(22).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 2, gridRow: 1 }} data-position="23">
+          {getPiecesOnPosition(23).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 2, gridRow: 2 }} data-position="24">
+          {getPiecesOnPosition(24).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        <div className="path-cell" style={{ gridColumn: 1, gridRow: 2 }} data-position="25">
+          {getPiecesOnPosition(25).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        
+        {/* Case de départ vert */}
+        <div className="path-cell start-position" style={{ gridColumn: 2, gridRow: 6 }} data-position="26">
+          ★ {getPiecesOnPosition(26).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
+        </div>
+        
+        {/* Case de départ jaune */}
+        <div className="path-cell start-position" style={{ gridColumn: 6, gridRow: 2 }} data-position="39">
+          ★ {getPiecesOnPosition(39).map(piece => (
+            <div key={piece.id} className={`piece ${piece.color}-piece ${selectedPiece === piece.id ? 'selected' : ''}`} onClick={() => handlePieceClick(piece.id)} />
+          ))}
         </div>
       </div>
 
