@@ -11,7 +11,7 @@ import type { GameState, Player, Move } from './types/game.types';
 import './App.css';
 import './components/GameSelector.css';
 
-const API_URL = 'http://localhost:3001'; // URL de votre backend
+const API_URL = 'http://localhost:3002'; // URL du backend actif (3002)
 
 const App: React.FC = () => {
   return (

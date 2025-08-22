@@ -58,7 +58,15 @@ const GameSelector: React.FC<GameSelectorProps> = ({ onGameSelect }) => {
             <li>Captures obligatoires</li>
             <li>Promotion en dame</li>
           </ul>
-          <button className="btn btn-primary" onClick={(e) => e.stopPropagation()}>Jouer aux Dames</button>
+          <button
+            className="btn btn-primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleGameSelect('checkers');
+            }}
+          >
+            Jouer aux Dames
+          </button>
         </div>
         
         <div className="game-card" onClick={() => handleGameSelect('ludo')}>
@@ -70,7 +78,15 @@ const GameSelector: React.FC<GameSelectorProps> = ({ onGameSelect }) => {
             <li>Sortez vos pions avec un 6</li>
             <li>Capturez les pions adverses</li>
           </ul>
-          <button className="btn btn-secondary" onClick={(e) => e.stopPropagation()}>Jouer au Ludo</button>
+          <button
+            className="btn btn-secondary"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleGameSelect('ludo');
+            }}
+          >
+            Jouer au Ludo
+          </button>
         </div>
       </div>
     </div>
