@@ -17,7 +17,10 @@ const App: React.FC = () => {
   return (
     <Router>
       <div className="app">
-        <h1>Jeu de Dames en Ligne</h1>
+        <header className="app-header">
+          <h1>🎲 Bienvenue sur les jeux de société de Floriace 🎯</h1>
+          <p className="app-subtitle">Découvrez nos jeux classiques en ligne !</p>
+        </header>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/game/:gameId" element={<Game />} />
