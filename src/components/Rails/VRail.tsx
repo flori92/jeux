@@ -4,36 +4,29 @@ import './Rails.css';
 
 interface VRailProps {
   color: string;
-  position?: 'top' | 'bottom';
-  piece: LudoPiece;
-  playerColor: string;
+  pieces: LudoPiece[];
+  disabled?: boolean;
   onClick?: (pieceId: string) => void;
-  isSelected?: boolean;
-  isMovable?: boolean;
 }
 
 export const VRail: React.FC<VRailProps> = ({
   color,
-  position = 'top',
-  piece,
-  playerColor,
+  pieces,
+  disabled = false,
   onClick,
-  isSelected,
-  isMovable
 }) => {
   const railHeight = 200; // Hauteur du rail vertical
   const railWidth = 80;   // Largeur du rail vertical
-  const { id } = piece;
 
   const handlePieceClick = (pieceId: string) => {
-    if (onClick) {
+    if (onClick && !disabled) {
       onClick(pieceId);
     }
   };
 
   return (
     <div 
-      className={`v-rail ${position}`}
+      className={`v-rail`}
       style={{
         width: railWidth,
         height: railHeight,
@@ -45,33 +38,35 @@ export const VRail: React.FC<VRailProps> = ({
         justifyContent: 'space-around',
         padding: '10px 0',
         position: 'relative',
+        opacity: disabled ? 0.5 : 1,
       }}
     >
-      <div 
-        className="rail-cell"
-        style={{
-          width: railWidth * 0.6,
-          height: railWidth * 0.6,
-          position: 'relative'
-        }}
-      >
-        <div
-          className={`piece ${playerColor} ${isSelected ? 'selected' : ''}`}
-          onClick={() => handlePieceClick(id)}
+      {pieces.map((piece, index) => (
+        <div 
+          key={piece.id}
+          className="rail-cell"
           style={{
-            width: '100%',
-            height: '100%',
-            borderRadius: '50%',
-            backgroundColor: playerColor,
-            border: isSelected ? '2px solid gold' : '2px solid white',
-            boxShadow: isSelected ? '0 0 10px gold' : '0 2px 5px rgba(0,0,0,0.3)',
-            cursor: isMovable ? 'pointer' : 'default',
-            opacity: isMovable ? 1 : 0.7,
-            transform: isMovable && isSelected ? 'scale(1.1)' : 'none',
-            transition: 'all 0.2s ease'
+            width: railWidth * 0.6,
+            height: railWidth * 0.6,
+            position: 'relative'
           }}
-        />
-      </div>
+        >
+          <div
+            className={`piece ${piece.color}`}
+            onClick={() => handlePieceClick(piece.id)}
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              backgroundColor: piece.color,
+              border: '2px solid white',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+              cursor: disabled ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          />
+        </div>
+      ))}
     </div>
   );
 };
