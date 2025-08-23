@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import type { RootState } from '../../store';
 import { Houses } from '../Houses';
 import { SideBoard } from '../SideBoard';
 import { rollDice, movePiece, endTurn } from '../../store/gameSlice';

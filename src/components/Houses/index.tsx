@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import type { RootState } from '../../store';
 import { House } from '../House';
 import { HRail } from '../Rails/HRail';
 import { VRail } from '../Rails/VRail';
