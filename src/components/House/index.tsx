@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { LudoPiece } from '../../types/game.types';
+import type { LudoPiece } from '../../types/game.types';
 
 interface HouseProps {
   houseNumber: number;

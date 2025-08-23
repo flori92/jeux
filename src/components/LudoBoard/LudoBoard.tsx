@@ -4,7 +4,7 @@ import { RootState } from '../../store';
 import { Houses } from '../Houses';
 import { SideBoard } from '../SideBoard';
 import { rollDice, movePiece, endTurn } from '../../store/gameSlice';
-import { LudoPiece, LudoPlayer } from '../../types/game.types';
+import type { LudoPiece, LudoPlayer } from '../../types/game.types';
 import './LudoBoard.css';
 
 export const LudoBoard: React.FC = () => {
