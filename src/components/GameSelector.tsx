@@ -1,4 +1,5 @@
 import React from 'react';
+import './GameSelector.css';
 
 interface GameSelectorProps {
   onGameSelect: (gameType: 'checkers' | 'ludo', mode: 'multiplayer' | 'ai') => void;
@@ -57,6 +58,7 @@ const GameSelector: React.FC<GameSelectorProps> = ({ onGameSelect }) => {
             <li>Déplacements en diagonale</li>
             <li>Captures obligatoires</li>
             <li>Promotion en dame</li>
+            <li>Captures avant et arrière</li>
           </ul>
           <button
             className="btn btn-primary"
@@ -77,6 +79,7 @@ const GameSelector: React.FC<GameSelectorProps> = ({ onGameSelect }) => {
             <li>Lancez le dé pour avancer</li>
             <li>Sortez vos pions avec un 6</li>
             <li>Capturez les pions adverses</li>
+            <li>Premier à finir gagne</li>
           </ul>
           <button
             className="btn btn-secondary"
