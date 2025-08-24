@@ -1,3 +1,35 @@
+// Types pour les jeux de dames
+export interface Piece {
+  id: string;
+  playerId: string;
+  isKing: boolean;
+  position: [number, number];
+}
+
+export interface Move {
+  from: [number, number];
+  to: [number, number];
+  capturedPiece?: [number, number];
+}
+
+export interface Player {
+  id: string;
+  name: string;
+  color: 'white' | 'black';
+}
+
+export interface GameState {
+  id: string;
+  board: (Piece | null)[][];
+  players: Player[];
+  pieces: Record<string, Piece[]>;
+  currentPlayer: string;
+  winner: string | null;
+  status: 'waiting' | 'playing' | 'finished';
+  captureChain: any;
+  gameType: 'checkers' | 'ludo';
+}
+
 // Types de base
 export type PlayerColor = 'red' | 'blue' | 'yellow' | 'green';
 export type GameStatus = 'waiting' | 'playing' | 'finished';

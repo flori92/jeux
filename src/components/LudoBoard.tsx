@@ -27,115 +27,60 @@ interface LudoGameState {
   gameStatus: 'waiting' | 'playing' | 'finished';
 }
 
-const LudoBoard: React.FC = () => {
-  const [gameState, setGameState] = useState<LudoGameState>({
-    players: [],
-    currentPlayerIndex: 0,
-    diceValue: null,
-    canRollDice: true,
-    winner: null,
-    gameStatus: 'waiting'
-  });
-  
+interface LudoBoardProps {
+  gameState: LudoGameState;
+  playerId: string;
+  onRollDice: () => void;
+  onMovePiece: (pieceId: string) => void;
+}
+
+// Type guard pour vérifier si un objet est un LudoPlayer
+const isLudoPlayer = (obj: any): obj is LudoPlayer => {
+  return obj && typeof obj === 'object' && 'id' in obj && 'pieces' in obj;
+};
+
+const LudoBoard: React.FC<LudoBoardProps> = ({ 
+  gameState, 
+  playerId, 
+  onRollDice, 
+  onMovePiece 
+}) => {
   const [selectedPiece, setSelectedPiece] = useState<string | null>(null);
+  const [possibleMoves, setPossibleMoves] = useState<string[]>([]);
 
-  // Initialize game
+  // Calculer les mouvements possibles
+  const calculatePossibleMoves = useCallback(() => {
+    if (!gameState.diceValue) return [];
+    
+    const currentPlayer = gameState.players.find(p => p.id === playerId);
+    if (!currentPlayer) return [];
+
+    return currentPlayer.pieces
+      .filter(piece => {
+        // Peut sortir de la maison avec un 6
+        if (piece.isAtHome && gameState.diceValue === 6) return true;
+        // Peut bouger sur le plateau
+        if (!piece.isAtHome && typeof piece.position === 'number') return true;
+        return false;
+      })
+      .map(piece => piece.id);
+  }, [gameState.diceValue, gameState.players, playerId]);
+
+  // Mettre à jour les mouvements possibles quand le dé change
   useEffect(() => {
-    const initializePlayers = (): LudoPlayer[] => {
-      const colors: ('red' | 'blue' | 'yellow' | 'green')[] = ['red', 'blue', 'yellow', 'green'];
-      return colors.map((color, index) => ({
-        id: `player-${index}`,
-        name: `Player ${index + 1}`,
-        color,
-        isActive: index === 0,
-        pieces: Array.from({ length: 4 }, (_, pieceIndex) => ({
-          id: `${color}-${pieceIndex}`,
-          playerId: `player-${index}`,
-          position: 'home' as const,
-          color,
-          isAtHome: true,
-          isMovable: false
-        }))
-      }));
-    };
+    setPossibleMoves(calculatePossibleMoves());
+  }, [calculatePossibleMoves]);
 
-    setGameState(prev => ({
-      ...prev,
-      players: initializePlayers(),
-      gameStatus: 'playing'
-    }));
-  }, []);
-
-  // Roll dice
-  const rollDice = useCallback(() => {
-    if (!gameState.canRollDice) return;
-    
-    const diceValue = Math.floor(Math.random() * 6) + 1;
-    setGameState(prev => ({
-      ...prev,
-      diceValue,
-      canRollDice: false
-    }));
-  }, [gameState.canRollDice]);
-
-  // Move piece
-  const movePiece = useCallback((pieceId: string) => {
-    if (!gameState.diceValue) return;
-
-    setGameState(prev => {
-      const newPlayers = [...prev.players];
-      const currentPlayer = newPlayers[prev.currentPlayerIndex];
-      const piece = currentPlayer.pieces.find(p => p.id === pieceId);
-      
-      if (!piece) return prev;
-
-      // Move piece logic
-      if (piece.position === 'home' && prev.diceValue === 6) {
-        piece.position = 0; // Start position
-        piece.isAtHome = false;
-      } else if (typeof piece.position === 'number') {
-        piece.position = (piece.position + prev.diceValue!) % 52;
-      }
-
-      // Check if player gets another turn (rolled 6)
-      const nextPlayerIndex = prev.diceValue === 6 ? 
-        prev.currentPlayerIndex : 
-        (prev.currentPlayerIndex + 1) % prev.players.length;
-
-      // Update active player
-      newPlayers.forEach((player, index) => {
-        player.isActive = index === nextPlayerIndex;
-      });
-
-      return {
-        ...prev,
-        players: newPlayers,
-        currentPlayerIndex: nextPlayerIndex,
-        diceValue: null,
-        canRollDice: true
-      };
-    });
-
-    setSelectedPiece(null);
-  }, [gameState.diceValue]);
-
-  // Handle piece click
+  // Gérer le clic sur une pièce
   const handlePieceClick = useCallback((pieceId: string) => {
-    if (!gameState.diceValue) return;
-    
-    const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-    const piece = currentPlayer.pieces.find(p => p.id === pieceId);
-    
-    if (!piece) return;
-
-    // Check if piece can move
-    const canMove = (piece.position === 'home' && gameState.diceValue === 6) ||
-                   (typeof piece.position === 'number');
-
-    if (canMove) {
-      movePiece(pieceId);
+    if (possibleMoves.includes(pieceId)) {
+      onMovePiece(pieceId);
+      setSelectedPiece(null);
+      setPossibleMoves([]);
+    } else {
+      setSelectedPiece(pieceId);
     }
-  }, [gameState.diceValue, gameState.players, gameState.currentPlayerIndex, movePiece]);
+  }, [possibleMoves, onMovePiece]);
 
   // Get position coordinates for pieces on track
   const getPositionCoordinates = (position: number): { x: number; y: number } => {
@@ -312,11 +257,11 @@ const LudoBoard: React.FC = () => {
         </div>
         
         <div className="dice-container">
-          <div className="dice" onClick={rollDice}>
+          <div className="dice" onClick={onRollDice}>
             {gameState.diceValue || '🎲'}
           </div>
           {gameState.canRollDice && (
-            <button className="roll-button" onClick={rollDice}>
+            <button className="roll-button" onClick={onRollDice}>
               Lancer le dé
             </button>
           )}
