@@ -9,7 +9,12 @@ import './Houses.css';
 const HOUSE_COLORS = ['#FF5252', '#2196F3', '#FFC107', '#4CAF50'];
 const HOUSE_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 
-export const Houses: React.FC = () => {
+interface HousesProps {
+  onPieceClick?: (pieceId: string) => void;
+  selectedPiece?: string | null;
+}
+
+export const Houses: React.FC<HousesProps> = ({ onPieceClick }) => {
   const { players, currentPlayerId } = useSelector((state: RootState) => ({
     players: state.game.players,
     currentPlayerId: state.game.currentPlayerId
@@ -35,10 +40,9 @@ export const Houses: React.FC = () => {
   };
 
   const handlePieceClick = (pieceId: string) => {
-    // Logique de sélection de pièce
-    console.log('Piece clicked:', pieceId);
-    // Ici, vous pourriez dispatcher une action Redux pour sélectionner la pièce
-    // dispatch(selectPiece(pieceId));
+    if (onPieceClick) {
+      onPieceClick(pieceId);
+    }
   };
 
   return (

@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../store';
-import { Houses } from '../Houses';
+import Houses from '../Houses';
 import { SideBoard } from '../SideBoard';
 import { rollDice, movePiece, endTurn } from '../../store/gameSlice';
-import type { LudoPiece, LudoPlayer } from '../../types/game.types';
 import './LudoBoard.css';
 
 export const LudoBoard: React.FC = () => {
@@ -21,7 +20,7 @@ export const LudoBoard: React.FC = () => {
     players: state.game.players,
     currentPlayerId: state.game.currentPlayerId,
     diceValue: state.game.diceValue,
-    gameStatus: state.game.status,
+    gameStatus: state.game.gameStatus,
     winner: state.game.winner,
     canRollDice: state.game.canRollDice,
     possibleMoves: state.game.possibleMoves || []
@@ -33,16 +32,20 @@ export const LudoBoard: React.FC = () => {
   // Gestion du lancer de dé
   const handleRollDice = useCallback(() => {
     if (canRollDice) {
-      dispatch(rollDice());
+      dispatch(rollDice({ playerId: currentPlayerId || '', value: Math.floor(Math.random() * 6) + 1 }));
     }
-  }, [canRollDice, dispatch]);
+  }, [canRollDice, dispatch, currentPlayerId]);
 
   // Gestion du clic sur une pièce
   const handlePieceClick = useCallback((pieceId: string) => {
-    if (!currentPlayer) return;
+    if (!currentPlayer) {
+      return;
+    }
 
     const piece = currentPlayer.pieces.find(p => p.id === pieceId);
-    if (!piece) return;
+    if (!piece) {
+      return;
+    }
 
     // Si la pièce est sélectionnée, on la déselectionne
     if (selectedPiece === pieceId) {
@@ -54,7 +57,10 @@ export const LudoBoard: React.FC = () => {
     if (diceValue !== null && !canRollDice) {
       // Vérifier si la pièce peut être déplacée
       if (possibleMoves.includes(pieceId)) {
-        dispatch(movePiece({ pieceId }));
+        // Calculer la position de destination basée sur la valeur du dé
+        const currentPosition = piece.position;
+        const newPosition = typeof currentPosition === 'number' ? currentPosition + (diceValue || 0) : 0;
+        dispatch(movePiece({ pieceId, toPosition: newPosition }));
         setSelectedPiece(null);
       } else {
         setSelectedPiece(pieceId);
@@ -78,7 +84,13 @@ export const LudoBoard: React.FC = () => {
       } else if (e.key === ' ' && canRollDice) {
         handleRollDice();
       } else if (e.key === 'Enter' && selectedPiece && possibleMoves.includes(selectedPiece)) {
-        dispatch(movePiece({ pieceId: selectedPiece }));
+        // Calculer la position de destination pour la pièce sélectionnée
+        const selectedPieceObj = currentPlayer?.pieces.find(p => p.id === selectedPiece);
+        if (selectedPieceObj) {
+          const currentPosition = selectedPieceObj.position;
+          const newPosition = typeof currentPosition === 'number' ? currentPosition + (diceValue || 0) : 0;
+          dispatch(movePiece({ pieceId: selectedPiece, toPosition: newPosition }));
+        }
         setSelectedPiece(null);
       }
     };
@@ -87,7 +99,7 @@ export const LudoBoard: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [canRollDice, selectedPiece, possibleMoves, handleRollDice, dispatch]);
+  }, [canRollDice, selectedPiece, possibleMoves, handleRollDice, dispatch, currentPlayer?.pieces, diceValue]);
 
   // Vérifier s'il y a un gagnant
   useEffect(() => {

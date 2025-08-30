@@ -1,5 +1,4 @@
 import React from 'react';
-import { useDispatch } from 'react-redux';
 import type { LudoPiece } from '../../types/game.types';
 
 interface HouseProps {
@@ -17,7 +16,6 @@ export const House: React.FC<HouseProps> = ({
   disabled = false,
   onPieceClick
 }) => {
-  const dispatch = useDispatch();
   const houseHeight = 200; // Taille de base, à ajuster selon le design
   const seedSize = houseHeight * 0.15;
 
@@ -58,18 +56,18 @@ export const House: React.FC<HouseProps> = ({
         }}
       >
         {pieces
-          .filter(piece => piece.position === 'base')
+          .filter(piece => piece.position === 'home')
           .map((piece, index) => (
             <div
               key={piece.id}
-              className={`piece ${piece.color} ${disabled ? 'disabled' : ''}`}
+              className={`piece ${disabled ? 'disabled' : ''}`}
               onClick={() => handlePieceClick(piece.id)}
               style={{
                 width: seedSize,
                 height: seedSize,
                 margin: seedSize * 0.2,
                 borderRadius: '50%',
-                backgroundColor: piece.color,
+                backgroundColor: color,
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -77,9 +75,7 @@ export const House: React.FC<HouseProps> = ({
                 fontWeight: 'bold',
                 cursor: disabled ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s ease',
-                ':hover': {
-                  transform: disabled ? 'none' : 'scale(1.1)'
-                }
+                // Hover effects handled by CSS
               }}
             >
               {index + 1}

@@ -1,5 +1,5 @@
 import React from 'react';
-import LudoBoard from '../LudoBoard';
+import { LudoBoard } from '../LudoBoard/LudoBoard';
 
 const Game: React.FC = () => {
   return (

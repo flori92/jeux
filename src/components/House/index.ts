@@ -1,3 +1,1 @@
-import House from './House';
-
-export default House;
+export { default } from './House';

@@ -34,10 +34,6 @@ interface LudoBoardProps {
   onMovePiece: (pieceId: string) => void;
 }
 
-// Type guard pour vérifier si un objet est un LudoPlayer
-const isLudoPlayer = (obj: any): obj is LudoPlayer => {
-  return obj && typeof obj === 'object' && 'id' in obj && 'pieces' in obj;
-};
 
 const LudoBoard: React.FC<LudoBoardProps> = ({ 
   gameState, 
@@ -50,17 +46,25 @@ const LudoBoard: React.FC<LudoBoardProps> = ({
 
   // Calculer les mouvements possibles
   const calculatePossibleMoves = useCallback(() => {
-    if (!gameState.diceValue) return [];
+    if (!gameState.diceValue) {
+      return [];
+    }
     
     const currentPlayer = gameState.players.find(p => p.id === playerId);
-    if (!currentPlayer) return [];
+    if (!currentPlayer) {
+      return [];
+    }
 
     return currentPlayer.pieces
       .filter(piece => {
         // Peut sortir de la maison avec un 6
-        if (piece.isAtHome && gameState.diceValue === 6) return true;
+        if (piece.isAtHome && gameState.diceValue === 6) {
+          return true;
+        }
         // Peut bouger sur le plateau
-        if (!piece.isAtHome && typeof piece.position === 'number') return true;
+        if (!piece.isAtHome && typeof piece.position === 'number') {
+          return true;
+        }
         return false;
       })
       .map(piece => piece.id);
@@ -79,21 +83,10 @@ const LudoBoard: React.FC<LudoBoardProps> = ({
       setPossibleMoves([]);
     } else {
       setSelectedPiece(pieceId);
+      console.log("Piece selected:", pieceId);
     }
   }, [possibleMoves, onMovePiece]);
 
-  // Get position coordinates for pieces on track
-  const getPositionCoordinates = (position: number): { x: number; y: number } => {
-    const centerX = 300;
-    const centerY = 300;
-    const radius = 200;
-    const angle = (position * 360 / 52) * (Math.PI / 180);
-    
-    return {
-      x: centerX + radius * Math.cos(angle),
-      y: centerY + radius * Math.sin(angle)
-    };
-  };
 
   const currentPlayer = gameState.players[gameState.currentPlayerIndex];
 

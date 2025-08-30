@@ -3,10 +3,10 @@ import { useGameSocket } from './hooks/useGameSocket';
 import { useNotifications } from './hooks/useNotifications';
 import GameSelector from './components/GameSelector';
 import GameBoard from './components/GameBoard';
-import LudoBoard from './components/LudoBoard';
-import Lobby from './components/Lobby';
+import { LudoBoard } from './components/LudoBoard/LudoBoard';
 import ShareGameLink from './components/ShareGameLink';
 import GameNotifications from './components/GameNotifications';
+import type { GameState as ImportedGameState, LudoGameState, Move } from './types/game.types';
 import './App.css';
 
 type GameType = 'checkers' | 'ludo';
@@ -18,33 +18,63 @@ interface Player {
   name: string;
 }
 
-interface GameState {
+interface AppGameState {
   id: string;
-  players: any[];
+  players: Player[];
   currentPlayer: string;
   status: 'waiting' | 'playing' | 'finished';
-  winner?: string;
+  winner?: string | null;
   gameType: GameType;
-  board?: any;
-  pieces?: any;
+  board?: unknown;
+  pieces?: unknown;
   diceValue?: number;
   canRollDice?: boolean;
   possibleMoves?: string[];
+  captureChain?: unknown;
+  currentPlayerIndex?: number;
+  gameStatus?: string;
 }
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>('menu');
   const [selectedGame, setSelectedGame] = useState<GameType | null>(null);
-  const [selectedMode, setSelectedMode] = useState<GameMode | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
-  const [gameState, setGameState] = useState<GameState | null>(null);
+  const [gameState, setGameState] = useState<AppGameState | null>(null);
   const [gameId, setGameId] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [playerName, setPlayerName] = useState('');
   const [joinGameId, setJoinGameId] = useState('');
   const [isJoining, setIsJoining] = useState(false);
 
-  const { notifications, addNotification, removeNotification, showSuccess, showError, showInfo } = useNotifications();
+  const { notifications, removeNotification, showSuccess, showError, showInfo } = useNotifications();
+
+  // Fonction utilitaire pour adapter les états de jeu
+  const adaptGameState = (newGameState: ImportedGameState | LudoGameState): AppGameState => {
+    const isLudoState = 'currentPlayerId' in newGameState;
+    const winner = 'winner' in newGameState ? newGameState.winner : null;
+    
+    return {
+      id: newGameState.id,
+      players: Array.isArray(newGameState.players) 
+        ? newGameState.players.map(p => ({ 
+            id: typeof p === 'string' ? p : p.id || '', 
+            name: typeof p === 'string' ? p : p.name || '' 
+          })) 
+        : [],
+      currentPlayer: isLudoState ? newGameState.currentPlayerId || '' : newGameState.currentPlayer,
+      status: newGameState.status,
+      winner: typeof winner === 'string' ? winner : winner?.id || null,
+      gameType: ('gameType' in newGameState ? newGameState.gameType : isLudoState ? 'ludo' : 'checkers') as GameType,
+      board: 'board' in newGameState ? newGameState.board : undefined,
+      pieces: 'pieces' in newGameState ? newGameState.pieces : undefined,
+      diceValue: 'diceValue' in newGameState ? newGameState.diceValue || undefined : undefined,
+      canRollDice: 'canRollDice' in newGameState ? newGameState.canRollDice : undefined,
+      possibleMoves: 'possibleMoves' in newGameState ? newGameState.possibleMoves : undefined,
+      captureChain: 'captureChain' in newGameState ? newGameState.captureChain : undefined,
+      currentPlayerIndex: 'currentPlayerIndex' in newGameState ? (typeof newGameState.currentPlayerIndex === 'number' ? newGameState.currentPlayerIndex : undefined) : undefined,
+      gameStatus: 'gameStatus' in newGameState ? (typeof newGameState.gameStatus === 'string' ? newGameState.gameStatus : undefined) : undefined
+    };
+  };
 
   // Configuration du socket
   const {
@@ -53,23 +83,22 @@ const App: React.FC = () => {
     createGame,
     joinGame,
     makeMove,
-    rollDice,
-    moveLudoPiece,
-    invitePlayer
   } = useGameSocket({
     url: 'http://localhost:3001',
     playerId: player?.id || '',
-    onGameStateUpdate: (newGameState) => {
-      setGameState(newGameState);
-      if (newGameState.status === 'playing' && appState !== 'game') {
+    onGameStateUpdate: (newGameState: ImportedGameState | LudoGameState) => {
+      const adaptedState = adaptGameState(newGameState);
+      setGameState(adaptedState);
+      if (adaptedState.status === 'playing' && appState !== 'game') {
         setAppState('game');
       }
     },
     onInviteReceived: (invite) => {
       showInfo('Invitation reçue', `${invite.from} vous invite à jouer !`);
     },
-    onGameStart: (newGameState) => {
-      setGameState(newGameState);
+    onGameStart: (newGameState: ImportedGameState | LudoGameState) => {
+      const adaptedState = adaptGameState(newGameState);
+      setGameState(adaptedState);
       setAppState('game');
       showSuccess('Partie commencée', 'La partie a commencé !');
     },
@@ -102,19 +131,22 @@ const App: React.FC = () => {
 
   const handleGameSelect = async (gameType: GameType, mode: GameMode) => {
     setSelectedGame(gameType);
-    setSelectedMode(mode);
+    // Mode sélectionné géré par gameType
 
     if (mode === 'ai') {
       // Mode IA - créer une partie directement
-      if (!player) return;
+      if (!player) {
+        return;
+      }
       
       try {
         const { gameId: newGameId, gameState: newGameState } = await createGame(player.name, gameType);
         setGameId(newGameId);
-        setGameState(newGameState);
+        const adaptedState = adaptGameState(newGameState);
+        setGameState(adaptedState);
         setAppState('game');
         showSuccess('Partie créée', 'Partie contre l\'IA créée avec succès !');
-      } catch (error) {
+      } catch {
         showError('Erreur', 'Impossible de créer la partie');
       }
     } else {
@@ -124,60 +156,56 @@ const App: React.FC = () => {
   };
 
   const handleCreateGame = async () => {
-    if (!player || !selectedGame) return;
+    if (!player || !selectedGame) {
+      return;
+    }
 
     try {
       const { gameId: newGameId, gameState: newGameState } = await createGame(player.name, selectedGame);
       setGameId(newGameId);
-      setGameState(newGameState);
+      const adaptedState = adaptGameState(newGameState);
+      setGameState(adaptedState);
       setShowShareModal(true);
       showSuccess('Partie créée', `Partie créée avec l'ID: ${newGameId}`);
-    } catch (error) {
+    } catch {
       showError('Erreur', 'Impossible de créer la partie');
     }
   };
 
   const handleJoinGame = async () => {
-    if (!player || !joinGameId.trim()) return;
+    if (!player || !joinGameId.trim()) {
+      return;
+    }
 
     setIsJoining(true);
     try {
       const newGameState = await joinGame(joinGameId.trim(), player.name);
       setGameId(joinGameId.trim());
-      setGameState(newGameState);
+      const adaptedState = adaptGameState(newGameState);
+      setGameState(adaptedState);
       setAppState('game');
       showSuccess('Partie rejointe', 'Vous avez rejoint la partie avec succès !');
-    } catch (error) {
+    } catch {
       showError('Erreur', 'Impossible de rejoindre la partie');
     } finally {
       setIsJoining(false);
     }
   };
 
-  const handleMove = (move: any) => {
-    if (!gameId) return;
+  const handleMove = (move: Move) => {
+    if (!gameId) {
+      return;
+    }
+    if (gameState && gameState.status === 'finished') {
+      return;
+    }
     makeMove(move, gameId);
   };
 
-  const handleRollDice = () => {
-    if (!gameId) return;
-    rollDice(gameId);
-  };
-
-  const handleMovePiece = (pieceId: string) => {
-    if (!gameId) return;
-    moveLudoPiece(gameId, pieceId);
-  };
-
-  const handleInvitePlayer = (email: string) => {
-    invitePlayer(email);
-    showSuccess('Invitation envoyée', `Invitation envoyée à ${email}`);
-  };
 
   const handleBackToMenu = () => {
     setAppState('menu');
     setSelectedGame(null);
-    setSelectedMode(null);
     setGameState(null);
     setGameId(null);
     setShowShareModal(false);
@@ -293,18 +321,13 @@ const App: React.FC = () => {
 
           {selectedGame === 'checkers' ? (
             <GameBoard
-              gameState={gameState}
+              gameState={gameState as unknown as ImportedGameState}
               currentPlayerId={gameState.currentPlayer}
               onMove={handleMove}
               playerId={player.id}
             />
           ) : (
-            <LudoBoard
-              gameState={gameState}
-              playerId={player.id}
-              onRollDice={handleRollDice}
-              onMovePiece={handleMovePiece}
-            />
+            <LudoBoard />
           )}
         </div>
       )}

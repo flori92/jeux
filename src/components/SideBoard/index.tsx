@@ -3,18 +3,25 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../../store';
 import './SideBoard.css';
 
-export const SideBoard: React.FC = () => {
+interface SideBoardProps {
+  onRollDice?: () => void;
+  onEndTurn?: () => void;
+  canRollDice?: boolean;
+  canEndTurn?: boolean;
+}
+
+export const SideBoard: React.FC<SideBoardProps> = ({ onRollDice, onEndTurn, canRollDice, canEndTurn }) => {
   const { 
-    currentPlayer, 
+    currentPlayerId, 
     players, 
     diceValue, 
     gameStatus, 
     winner 
   } = useSelector((state: RootState) => ({
-    currentPlayer: state.game.currentPlayer,
+    currentPlayerId: state.game.currentPlayerId,
     players: state.game.players,
     diceValue: state.game.diceValue,
-    gameStatus: state.game.status,
+    gameStatus: state.game.gameStatus,
     winner: state.game.winner
   }));
 
@@ -45,7 +52,8 @@ export const SideBoard: React.FC = () => {
         </div>
         <button 
           className="roll-button"
-          disabled={gameStatus !== 'playing' || currentPlayer?.id !== currentPlayer?.id}
+          disabled={!canRollDice || gameStatus !== 'playing'}
+          onClick={onRollDice}
         >
           Lancer le dé
         </button>
@@ -57,7 +65,7 @@ export const SideBoard: React.FC = () => {
           {sortedPlayers.map((player) => (
             <div 
               key={player.id} 
-              className={`player-card ${player.id === currentPlayer?.id ? 'current' : ''}`}
+              className={`player-card ${player.id === currentPlayerId ? 'current' : ''}`}
             >
               <div 
                 className="player-color" 
@@ -66,11 +74,11 @@ export const SideBoard: React.FC = () => {
               <div className="player-info">
                 <div className="player-name">
                   {player.name}
-                  {player.id === currentPlayer?.id && ' (Vous)'}
+                  {player.id === currentPlayerId && ' (Vous)'}
                 </div>
                 <div className="player-score">Score: {player.score}</div>
                 <div className="player-pieces">
-                  Pièces arrivées: {player.pieces.filter(p => p.position === 'finished').length} / 4
+                  Pièces arrivées: {player.pieces.filter(p => p.position === 'end').length} / 4
                 </div>
               </div>
             </div>
@@ -84,6 +92,11 @@ export const SideBoard: React.FC = () => {
           <button className="action-button">
             Règles du jeu
           </button>
+          {canEndTurn && (
+            <button className="action-button" onClick={onEndTurn}>
+              Finir le tour
+            </button>
+          )}
           <button className="action-button">
             Abandonner
           </button>
