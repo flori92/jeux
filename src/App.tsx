@@ -110,16 +110,6 @@ const App: React.FC = () => {
     }
   });
 
-  // Initialisation du joueur
-  useEffect(() => {
-    if (!player && playerName) {
-      const newPlayer: Player = {
-        id: `player_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        name: playerName
-      };
-      setPlayer(newPlayer);
-    }
-  }, [playerName, player]);
 
   // Connexion socket
   useEffect(() => {
@@ -226,10 +216,26 @@ const App: React.FC = () => {
               onChange={(e) => setPlayerName(e.target.value)}
               placeholder="Votre nom..."
               className="name-input"
-              onKeyPress={(e) => e.key === 'Enter' && playerName.trim() && setPlayerName(playerName.trim())}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && playerName.trim()) {
+                  const trimmedName = playerName.trim();
+                  setPlayer({
+                    id: `player_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    name: trimmedName
+                  });
+                }
+              }}
             />
             <button
-              onClick={() => playerName.trim() && setPlayerName(playerName.trim())}
+              onClick={() => {
+                if (playerName.trim()) {
+                  const trimmedName = playerName.trim();
+                  setPlayer({
+                    id: `player_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    name: trimmedName
+                  });
+                }
+              }}
               disabled={!playerName.trim()}
               className="start-button"
             >
